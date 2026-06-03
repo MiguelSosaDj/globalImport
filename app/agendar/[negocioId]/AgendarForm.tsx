@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { getSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 const SERVICIOS_POR_TIPO: Record<string, string[]> = {
@@ -9,6 +8,25 @@ const SERVICIOS_POR_TIPO: Record<string, string[]> = {
   medico: ["Consulta general", "Control", "Examen", "Urgencia"],
   mecanico: ["Cambio de aceite", "Frenos", "Suspension", "Diagnostico"],
   masajista: ["Masaje relajante", "Masaje deportivo", "Reflexologia"],
+};
+
+// Precios por servicio (en USD). Ajusta según necesites.
+const PRECIOS_POR_SERVICIO: Record<string, number> = {
+  "Corte de cabello": 15,
+  "Barba": 10,
+  "Corte + barba": 22,
+  "Tinte": 30,
+  "Consulta general": 50,
+  "Control": 40,
+  "Examen": 60,
+  "Urgencia": 80,
+  "Cambio de aceite": 35,
+  "Frenos": 45,
+  "Suspension": 55,
+  "Diagnostico": 75,
+  "Masaje relajante": 45,
+  "Masaje deportivo": 50,
+  "Reflexologia": 40,
 };
 
 const SERVICIOS_DEFAULT = ["Servicio 1", "Servicio 2", "Servicio 3"];
@@ -29,7 +47,8 @@ export default function AgendarForm({ negocio }: { negocio: Negocio }) {
     fecha: "",
     hora: "",
   });
-  const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "error">("idle");
+  const [estado, setEstado] = useState<"idle" | "pago" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -37,27 +56,45 @@ export default function AgendarForm({ negocio }: { negocio: Negocio }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
+  const monto = PRECIOS_POR_SERVICIO[form.servicio] || 0;
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setEstado("cargando");
+    setEstado("pago");
+    setErrorMsg("");
 
-    const supabase = getSupabase();
-    const { error } = await supabase.from("citas").insert({
-      ...form,
-      negocio_id: negocio.id,
-    });
-
-    if (error) {
-      setEstado("error");
-    } else {
-      setEstado("ok");
-      setForm({
-        cliente_nombre: "",
-        cliente_telefono: "",
-        servicio: servicios[0],
-        fecha: "",
-        hora: "",
+    try {
+      // Crear sesión de checkout en Stripe
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          negocioId: negocio.id,
+          clienteNombre: form.cliente_nombre,
+          clienteTelefono: form.cliente_telefono,
+          servicio: form.servicio,
+          fecha: form.fecha,
+          hora: form.hora,
+          monto: monto,
+        }),
       });
+
+      if (!res.ok) {
+        throw new Error("Error al crear sesión de pago");
+      }
+
+      const { url } = await res.json();
+
+      if (url) {
+        // Redirigir a Stripe Checkout
+        window.location.href = url;
+      }
+    } catch (error: any) {
+      console.error("Error:", error);
+      setErrorMsg(error.message || "Error al procesar el pago");
+      setEstado("error");
     }
   }
 
@@ -79,14 +116,9 @@ export default function AgendarForm({ negocio }: { negocio: Negocio }) {
           <p className="text-sm text-zinc-500 mt-1">{negocio.nombre}</p>
         </div>
 
-        {estado === "ok" && (
-          <div className="mb-6 bg-green-500/10 text-green-400 text-sm px-4 py-3 rounded-xl border border-green-500/20">
-            Cita agendada. Te esperamos.
-          </div>
-        )}
         {estado === "error" && (
           <div className="mb-6 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20">
-            Algo salio mal. Intenta de nuevo.
+            {errorMsg || "Algo salió mal. Intenta de nuevo."}
           </div>
         )}
 
@@ -156,15 +188,35 @@ export default function AgendarForm({ negocio }: { negocio: Negocio }) {
             </div>
           </div>
 
+          {/* Resumen de pago */}
+          <div className="bg-violet-500/10 border border-violet-500/20 rounded-xl p-4 mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm text-zinc-400">Servicio:</span>
+              <span className="text-sm font-medium text-white">{form.servicio}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-zinc-400">Total:</span>
+              <span className="text-lg font-bold text-violet-400">${monto.toFixed(2)}</span>
+            </div>
+          </div>
+
           <button
             type="submit"
-            disabled={estado === "cargando"}
-            className="mt-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+            disabled={estado === "pago"}
+            className="mt-6 w-full bg-violet-600 hover:bg-violet-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
-            {estado === "cargando" ? "Agendando..." : "Confirmar cita"}
+            {estado === "pago" ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Procesando pago...
+              </>
+            ) : (
+              `Pagar $${monto.toFixed(2)} y confirmar cita`
+            )}
           </button>
         </form>
       </div>
     </main>
   );
 }
+
