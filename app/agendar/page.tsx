@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 type Negocio = {
@@ -43,6 +43,7 @@ export default function AgendarPage() {
     async function cargarNegocios() {
       setCargandoNegocios(true);
       setNegocioSeleccionado(null);
+      const supabase = getSupabase();
       const { data } = await supabase
         .from("negocios")
         .select("id, nombre, tipo")
@@ -81,6 +82,7 @@ export default function AgendarPage() {
     if (!negocioSeleccionado) return;
     setEstado("cargando");
 
+    const supabase = getSupabase();
     const { error } = await supabase.from("citas").insert({
       ...form,
       negocio_id: negocioSeleccionado.id,

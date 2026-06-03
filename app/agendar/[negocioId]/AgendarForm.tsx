@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 const SERVICIOS_POR_TIPO: Record<string, string[]> = {
@@ -41,6 +41,7 @@ export default function AgendarForm({ negocio }: { negocio: Negocio }) {
     e.preventDefault();
     setEstado("cargando");
 
+    const supabase = getSupabase();
     const { error } = await supabase.from("citas").insert({
       ...form,
       negocio_id: negocio.id,

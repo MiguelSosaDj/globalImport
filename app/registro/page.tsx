@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
 export default function RegistroPage() {
@@ -24,6 +24,7 @@ export default function RegistroPage() {
     e.preventDefault();
     setEstado("cargando");
 
+    const supabase = getSupabase();
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
