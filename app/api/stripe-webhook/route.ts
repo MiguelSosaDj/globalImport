@@ -168,6 +168,7 @@ export async function POST(req: NextRequest) {
     console.error("Error general en /api/stripe-webhook:", error);
 
     return NextResponse.json(
+      
       { error: error.message || "Error interno del servidor" },
       { status: 500 }
     );
