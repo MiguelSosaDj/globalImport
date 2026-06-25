@@ -2,15 +2,36 @@ import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+function createStripe() {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+  if (!stripeSecretKey) {
+    throw new Error("Falta STRIPE_SECRET_KEY");
+  }
+
+  return new Stripe(stripeSecretKey);
+}
+
+function createSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
+  }
+
+  if (!serviceRoleKey) {
+    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey);
+}
 
 export async function POST(req: NextRequest) {
   try {
+    const stripe = createStripe();
+    const supabaseAdmin = createSupabaseAdmin();
+
     const {
       negocioId,
       clienteNombre,
@@ -40,6 +61,12 @@ export async function POST(req: NextRequest) {
         { error: "Monto inválido" },
         { status: 400 }
       );
+    }
+
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+    if (!appUrl) {
+      throw new Error("Falta NEXT_PUBLIC_APP_URL");
     }
 
     console.log("Creando cita pendiente...");
@@ -89,8 +116,8 @@ export async function POST(req: NextRequest) {
         },
       ],
 
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel?cita_id=${cita.id}`,
+      success_url: `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${appUrl}/cancel?cita_id=${cita.id}`,
 
       metadata: {
         citaId: cita.id,
