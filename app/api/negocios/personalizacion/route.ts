@@ -1,0 +1,33 @@
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(req: NextRequest) {
+  try {
+    const { negocioId, colorPrimario, colorSecundario } = await req.json();
+
+    if (!negocioId) {
+      return NextResponse.json({ error: "Falta negocioId" }, { status: 400 });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("negocios")
+      .update({
+        color_primario: colorPrimario,
+        color_secundario: colorSecundario,
+      })
+      .eq("id", negocioId)
+      .select()
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    return NextResponse.json({ negocio: data });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

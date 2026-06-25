@@ -2,12 +2,19 @@
 // app/dashboard/DashboardClient.tsx
 
 import { useState, useMemo, useEffect } from "react";
-
+import HorariosConfig from "./HorariosConfig";
+import PersonalizacionConfig from "./PersonalizacionConfig";
+import CalendarioMensual from "@/app/components/CalendarioMensual";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 interface Negocio {
   id: string;
   nombre: string;
   tipo?: string;
+  requiere_pago?: boolean;
+  duracion_cita?: number;
+  logo_url?: string;
+  color_primario?: string;
+  color_secundario?: string;
 }
 interface Cita {
   id: string;
@@ -16,13 +23,14 @@ interface Cita {
   servicio: string;
   fecha: string; // "YYYY-MM-DD"
   hora: string;  // "HH:MM"
+    estado_cita?: string; // agrega esta línea
 }
 interface Props {
   negocio: Negocio | null;
   citas: Cita[];
   agendamientoUrl: string;
   cerrarSesion: () => void | Promise<void>;
-}
+} 
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const MESES = [
@@ -46,42 +54,42 @@ function formatFechaCorta(f: string) {
 }
 
 // ── CSS global ────────────────────────────────────────────────────────────────
-const GLOBAL_CSS = `
+const GLOBAL_CSS = (cp: string, cs: string) => `
   @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(139,92,246,.3); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb { background: ${cp}4d; border-radius: 99px; }
 
   .cita-row {
     transition: background .15s, border-color .15s, transform .1s;
   }
   .cita-row:hover {
-    border-color: rgba(139,92,246,.4) !important;
-    background: rgba(139,92,246,.05) !important;
+    border-color: ${cp}66 !important;
+    background: ${cp}0d !important;
     transform: translateX(2px);
   }
   .cal-day {
     transition: background .12s, color .12s;
   }
   .cal-day:hover {
-    background: rgba(139,92,246,.15) !important;
-    color: #e9d5ff !important;
+    background: ${cp}26 !important;
+    color: ${cs} !important;
   }
   .btn-copy {
     transition: all .2s;
   }
   .btn-copy:hover {
-    background: rgba(139,92,246,.15) !important;
+    background: ${cp}26 !important;
   }
   .nav-btn {
     transition: background .15s, color .15s;
   }
   .nav-btn:hover {
-    background: rgba(139,92,246,.15) !important;
-    color: #e9d5ff !important;
+    background: ${cp}26 !important;
+    color: ${cs} !important;
   }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(8px); }
@@ -142,25 +150,76 @@ function StatusBadge({ fecha }: { fecha: string }) {
     </span>
   );
 }
+function AgendaDelDia({ citas, selectedDay }: { citas: Cita[]; selectedDay: string }) {
+  const HORAS = Array.from({ length: 13 }, (_, i) => i + 7); // 7am a 7pm
+
+  const citasDelDia = citas.filter((c) => c.fecha === selectedDay && c.estado_cita !== "cancelada");
+
+  function citaEnHora(hora: number) {
+    return citasDelDia.find((c) => parseInt(c.hora.split(":")[0]) === hora);
+  }
+
+  return (
+    <div style={{
+      background: "#0a0a0a", border: "1px solid rgba(255,255,255,.05)",
+      borderRadius: 14, overflow: "hidden",
+    }}>
+      {HORAS.map((h) => {
+        const cita = citaEnHora(h);
+        return (
+          <div
+            key={h}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "8px 12px", minHeight: 36,
+              borderBottom: "1px solid rgba(255,255,255,.03)",
+              background: cita ? "rgba(124,58,237,.06)" : "transparent",
+            }}
+          >
+            <span style={{
+              fontSize: 10, color: "#52525b", width: 44, flexShrink: 0,
+              fontFamily: "'DM Mono', monospace",
+            }}>
+              {h % 12 === 0 ? 12 : h % 12}:00 {h >= 12 ? "PM" : "AM"}
+            </span>
+            {cita ? (
+              <div style={{
+                flex: 1, background: "rgba(124,58,237,.15)",
+                border: "1px solid rgba(124,58,237,.3)",
+                borderRadius: 6, padding: "4px 8px",
+                fontSize: 11, color: "#e9d5ff",
+                fontFamily: "'Syne', sans-serif", fontWeight: 600,
+              }}>
+                {cita.cliente_nombre} · {cita.servicio}
+              </div>
+            ) : (
+              <div style={{ flex: 1, fontSize: 10, color: "#2a2a2e" }}>Libre</div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent = false }: {
-  label: string; value: string; sub?: string; accent?: boolean;
+function StatCard({ label, value, sub, accent = false, cp = "#7c3aed", cs = "#a855f7" }: {
+  label: string; value: string; sub?: string; accent?: boolean; cp?: string; cs?: string;
 }) {
   return (
     <div style={{
-      background: accent ? "rgba(124,58,237,.06)" : "#0f0f0f",
-      border: `1px solid ${accent ? "rgba(124,58,237,.25)" : "rgba(255,255,255,.05)"}`,
+      background: accent ? `${cp}0f` : "#0f0f0f",
+      border: `1px solid ${accent ? `${cp}40` : "rgba(255,255,255,.05)"}`,
       borderRadius: 16, padding: "18px 20px", position: "relative", overflow: "hidden",
     }}>
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 2,
         background: accent
-          ? "linear-gradient(90deg,#7c3aed,#a855f7,#e879f9)"
+          ? `linear-gradient(90deg,${cp},${cs})`
           : "linear-gradient(90deg,#27272a,#3f3f46)",
       }} />
       <div style={{
-        fontSize: 9, color: accent ? "#a78bfa" : "#52525b",
+        fontSize: 9, color: accent ? cs : "#52525b",
         textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10,
         fontFamily: "'Syne', sans-serif", fontWeight: 600,
       }}>
@@ -196,6 +255,7 @@ function Calendario({ citas, selectedDay, onSelectDay }: {
     citas.forEach(c => { map[c.fecha] = (map[c.fecha] || 0) + 1; });
     return map;
   }, [citas]);
+
 
   function changeMonth(dir: number) {
     setViewMonth(prev => {
@@ -391,7 +451,7 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
 }
 
 // ── Próximas citas (mini widget) ──────────────────────────────────────────────
-function ProximasCitas({ citas }: { citas: Cita[] }) {
+function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[]; cp?: string; cs?: string }) {
   const hoy = todayStr();
   const proximas = useMemo(
     () => citas.filter(c => c.fecha >= hoy).slice(0, 3),
@@ -417,14 +477,14 @@ function ProximasCitas({ citas }: { citas: Cita[] }) {
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: "rgba(124,58,237,.12)", border: "1px solid rgba(124,58,237,.2)",
+              background: `${cp}1f`, border: `1px solid ${cp}33`,
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}>
-              <span style={{ fontSize: 9, color: "#a78bfa", fontFamily: "'DM Mono', monospace", lineHeight: 1.1 }}>
+              <span style={{ fontSize: 9, color: cs, fontFamily: "'DM Mono', monospace", lineHeight: 1.1 }}>
                 {c.fecha.slice(8)}
               </span>
-              <span style={{ fontSize: 7, color: "#7c3aed", fontFamily: "'DM Mono', monospace" }}>
+              <span style={{ fontSize: 7, color: cp, fontFamily: "'DM Mono', monospace" }}>
                 {MESES[parseInt(c.fecha.slice(5, 7)) - 1].slice(0, 3).toUpperCase()}
               </span>
             </div>
@@ -447,6 +507,8 @@ function ProximasCitas({ citas }: { citas: Cita[] }) {
 
 // ── Componente principal ───────────────────────────────────────────────────────
 export default function DashboardClient({ negocio, citas, agendamientoUrl, cerrarSesion }: Props) {
+  const cp = negocio?.color_primario  || "#7c3aed";
+  const cs = negocio?.color_secundario || "#a855f7";
   const [selectedDay,  setSelectedDay]  = useState<string | null>(null);
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [copied, setCopied]             = useState(false);
@@ -462,7 +524,16 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
   }, [citas, hoy]);
 
   const citasHoy = useMemo(() => citas.filter(c => c.fecha === hoy).length, [citas, hoy]);
-
+  const diasInfoNegocio = useMemo(() => {
+  const map: Record<string, { cantidadCitas: number; habilitado: boolean }> = {};
+  citas.forEach((c) => {
+    if (c.estado_cita === "cancelada") return;
+    if (!map[c.fecha]) map[c.fecha] = { cantidadCitas: 0, habilitado: true };
+    map[c.fecha].cantidadCitas += 1;
+  });
+  
+  return map;
+}, [citas]);
   const citasFiltradas = useMemo(() => {
     let list = citas;
     if (selectedDay) list = list.filter(c => c.fecha === selectedDay);
@@ -492,11 +563,95 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
     setTimeout(() => setCopied(false), 2000);
   }
 
+  function abrirWhatsApp(cita: Cita) {
+  const numero = cita.cliente_telefono
+    .replace(/\D/g, "") // quita todo lo que no sea número
+    .replace(/^0/, "");  // quita el 0 inicial si lo tiene
+
+  // Si el número no empieza con código de país, agrega Colombia (+57)
+  const numeroCompleto = numero.startsWith("57") ? numero : `57${numero}`;
+
+  const mensaje = encodeURIComponent(
+    `Hola ${cita.cliente_nombre}, te informamos que tu cita en ${negocio?.nombre} ` +
+    `para el servicio de ${cita.servicio} el día ${formatFecha(cita.fecha)} a las ${cita.hora} ` +
+    `ha sido cancelada. Disculpa los inconvenientes. Para reagendar escríbenos aquí.`
+  );
+
+  window.open(`https://wa.me/${numeroCompleto}?text=${mensaje}`, "_blank");
+}
+
+async function handleTogglePago(e: React.MouseEvent) {
+  e.stopPropagation();
+  const res = await fetch("/api/negocios/toggle-pago", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      negocioId: negocio?.id, 
+      requierePago: !negocio?.requiere_pago 
+    }),
+  });
+  if (res.ok) window.location.reload();
+  else alert("Error al actualizar la configuración");
+}
+
+async function handleCancelar(cita: Cita, e: React.MouseEvent) {
+  e.stopPropagation(); // evita que seleccione la cita al hacer click
+
+  const confirmar = window.confirm(
+    `¿Cancelar la cita de ${cita.cliente_nombre} el ${formatFecha(cita.fecha)}?`
+  );
+  if (!confirmar) return;
+
+  const res = await fetch("/api/citas/cancelar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ citaId: cita.id }),
+  });
+
+  if (res.ok) {
+    abrirWhatsApp(cita); // abre WhatsApp con el mensaje listo
+    window.location.reload(); // recarga el dashboard para reflejar el cambio
+  } else {
+    alert("Error al cancelar la cita");
+  }
+}
+
+async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
+  e.stopPropagation();
+
+  const res = await fetch("/api/citas/confirmar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ citaId: cita.id }),
+  });
+
+  if (res.ok) {
+    // Abrir WhatsApp con mensaje de confirmación
+    const numero = cita.cliente_telefono
+      .replace(/\D/g, "")
+      .replace(/^0/, "");
+    const numeroCompleto = numero.startsWith("57") ? numero : `57${numero}`;
+
+    const mensaje = encodeURIComponent(
+      `Hola ${cita.cliente_nombre} 👋, tu cita en ${negocio?.nombre} ` +
+      `ha sido *confirmada* ✅\n\n` +
+      `📋 Servicio: ${cita.servicio}\n` +
+      `📅 Fecha: ${formatFecha(cita.fecha)}\n` +
+      `🕐 Hora: ${cita.hora}\n\n` +
+      `Te esperamos. Si necesitas cambiar algo, escríbenos aquí.`
+    );
+
+    window.open(`https://wa.me/${numeroCompleto}?text=${mensaje}`, "_blank");
+    window.location.reload();
+  } else {
+    alert("Error al confirmar la cita");
+  }
+}
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
-
+      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS(cp, cs) }} />
       <main style={{
         minHeight: "100vh",
         background: "#080808",
@@ -509,13 +664,13 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
           <div style={{
             position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
             width: 900, height: 700,
-            background: "radial-gradient(ellipse,rgba(109,40,217,.14) 0%,transparent 70%)",
+            background: `radial-gradient(ellipse,${cp}24 0%,transparent 70%)`,
             borderRadius: "50%",
           }} />
           <div style={{
             position: "absolute", bottom: "-20%", right: "-10%",
             width: 500, height: 500,
-            background: "radial-gradient(ellipse,rgba(168,85,247,.06) 0%,transparent 70%)",
+            background: `radial-gradient(ellipse,${cs}0f 0%,transparent 70%)`,
             borderRadius: "50%",
           }} />
         </div>
@@ -531,16 +686,19 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
           {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{
-              width: 28, height: 28, borderRadius: 8,
-              background: "linear-gradient(135deg,#6d28d9,#a855f7)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 14,
-            }}>
-              📅
-            </div>
+  width: 28, height: 28, borderRadius: 8,
+  background: negocio?.logo_url
+    ? `url(${negocio.logo_url})`
+    : `linear-gradient(135deg, ${negocio?.color_primario || "#6d28d9"}, ${negocio?.color_secundario || "#a855f7"})`,
+  backgroundSize: "cover", backgroundPosition: "center",
+  display: "flex", alignItems: "center", justifyContent: "center",
+  fontSize: 14,
+}}>
+  {!negocio?.logo_url && "📅"}
+</div>
             <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.3 }}>
               <span style={{
-                background: "linear-gradient(135deg,#a78bfa,#f0abfc)",
+                background: `linear-gradient(135deg,${cp},${cs})`,
                 WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
               }}>Citas</span>Ya
             </span>
@@ -565,8 +723,8 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {negocio?.tipo && (
               <span style={{
-                fontSize: 10, color: "#a78bfa",
-                background: "rgba(139,92,246,.08)", border: "1px solid rgba(139,92,246,.18)",
+                fontSize: 10, color: cs,
+                background: `${cp}14`, border: `1px solid ${cp}2e`,
                 padding: "3px 10px", borderRadius: 99, fontWeight: 600, letterSpacing: .5,
               }}>
                 {negocio.tipo}
@@ -596,7 +754,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
           className="dashboard-grid"
           style={{
             position: "relative", zIndex: 1,
-            display: "grid", gridTemplateColumns: "1fr 300px",
+            display: "grid", gridTemplateColumns: "1fr 380px",
             minHeight: "calc(100vh - 57px)",
           }}
         >
@@ -629,17 +787,17 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                 label="Total"
                 value={String(citas.length)}
                 sub="citas agendadas"
-                accent={citas.length > 0}
+                accent={citas.length > 0} cp={cp} cs={cs}
               />
               <StatCard
                 label="Próxima"
                 value={proxima ? formatFechaCorta(proxima.fecha) : "—"}
-                sub={proxima ? `a las ${proxima.hora}` : "sin citas futuras"}
+                sub={proxima ? `a las ${proxima.hora}` : "sin citas futuras"} cp={cp} cs={cs}
               />
               <StatCard
                 label="Este mes"
                 value={String(citasMes)}
-                sub={citasMes === 1 ? "cita" : "citas"}
+                sub={citasMes === 1 ? "cita" : "citas"} cp={cp} cs={cs}
               />
             </div>
 
@@ -653,7 +811,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={{
                   fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-                  color: "#7c3aed", marginBottom: 6,
+                  color: cp, marginBottom: 6,
                   fontFamily: "'Syne', sans-serif", fontWeight: 700,
                 }}>
                   🔗 Link de agendamiento
@@ -671,15 +829,80 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                 style={{
                   flexShrink: 0, fontSize: 11, padding: "7px 16px", borderRadius: 10,
                   cursor: "pointer",
-                  background: copied ? "rgba(74,222,128,.08)" : "rgba(124,58,237,.08)",
-                  color: copied ? "#4ade80" : "#a78bfa",
-                  border: `1px solid ${copied ? "rgba(74,222,128,.25)" : "rgba(124,58,237,.25)"}`,
+                  background: copied ? "rgba(74,222,128,.08)" : `${cp}14`,
+                  color: copied ? "#4ade80" : cs,
+                  border: `1px solid ${copied ? "rgba(74,222,128,.25)" : `${cp}40`}`,
                   fontFamily: "'Syne', sans-serif", fontWeight: 600,
                 }}
               >
                 {copied ? "✓ Copiado" : "Copiar"}
               </button>
             </div>
+            {/* Horarios de disponibilidad */}
+{negocio?.id && (
+  <HorariosConfig
+    negocioId={negocio.id}
+    duracionActual={negocio.duracion_cita || 30}
+  />
+)}
+
+{/* Personalización */}
+{negocio?.id && (
+  <PersonalizacionConfig
+    negocioId={negocio.id}
+    logoActual={negocio.logo_url}
+    colorPrimarioActual={negocio.color_primario}
+    colorSecundarioActual={negocio.color_secundario}
+  />
+)}
+
+{/* Toggle de pago */}
+<div style={{
+  background: "#0a0a0a",
+  border: "1px solid rgba(255,255,255,.05)",
+  borderRadius: 14, padding: "14px 18px", marginBottom: 28,
+  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+}}>
+  <div>
+    <div style={{
+      fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
+      color: negocio?.requiere_pago ? cp : "#52525b",
+      marginBottom: 6, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+    }}>
+      💳 Pago al agendar
+    </div>
+    <div style={{ fontSize: 11, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+      {negocio?.requiere_pago
+        ? "Tus clientes pagan antes de confirmar la cita"
+        : "Tus clientes agendan sin pagar anticipado"}
+    </div>
+  </div>
+
+  <button
+    onClick={handleTogglePago}
+    style={{
+      flexShrink: 0,
+      width: 44, height: 24, borderRadius: 99,
+      background: negocio?.requiere_pago
+        ? `${cp}99`
+        : "rgba(255,255,255,.08)",
+      border: `1px solid ${negocio?.requiere_pago ? cp : "rgba(255,255,255,.1)"}`,
+      cursor: "pointer",
+      position: "relative",
+      transition: "all .2s",
+    }}
+  >
+    <span style={{
+      position: "absolute",
+      top: 2,
+      left: negocio?.requiere_pago ? 22 : 2,
+      width: 18, height: 18, borderRadius: "50%",
+      background: "#fff",
+      transition: "left .2s",
+      display: "block",
+    }} />
+  </button>
+</div>
 
             {/* Buscador */}
             <div style={{ position: "relative", marginBottom: 20 }}>
@@ -700,7 +923,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                   fontFamily: "'DM Mono', monospace",
                   transition: "border-color .2s",
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,.4)"; }}
+                onFocus={e => { e.currentTarget.style.borderColor = `${cp}66`; }}
                 onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.06)"; }}
               />
             </div>
@@ -721,7 +944,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                 <button
                   onClick={() => { handleSelectDay(null); setSearch(""); }}
                   style={{
-                    fontSize: 10, color: "#7c3aed", background: "none",
+                    fontSize: 10, color: cp, background: "none",
                     border: "none", cursor: "pointer",
                     fontFamily: "'Syne', sans-serif", fontWeight: 600,
                   }}
@@ -757,8 +980,8 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                       className="cita-row fade-in"
                       onClick={() => handleSelectCita(c)}
                       style={{
-                        background: isSel ? "rgba(124,58,237,.07)" : "#0d0d0d",
-                        border: `1px solid ${isSel ? "rgba(124,58,237,.4)" : "rgba(255,255,255,.05)"}`,
+                        background: isSel ? `${cp}12` : "#0d0d0d",
+                        border: `1px solid ${isSel ? `${cp}66` : "rgba(255,255,255,.05)"}`,
                         borderRadius: 14, padding: "14px 18px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer",
@@ -779,7 +1002,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
                         <span style={{
-                          fontSize: 11, color: "#a78bfa", fontWeight: 600,
+                          fontSize: 11, color: cs, fontWeight: 600,
                           fontFamily: "'Syne', sans-serif",
                         }}>
                           {c.servicio}
@@ -788,6 +1011,58 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
                           {formatFechaCorta(c.fecha)} · {c.hora}
                         </span>
                         <StatusBadge fecha={c.fecha} />
+                       <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+  {c.estado_cita === "cancelada" && (
+    <span style={{
+      fontSize: 10, padding: "3px 10px", borderRadius: 99,
+      background: "rgba(113,113,122,.08)", color: "#71717a",
+      border: "1px solid rgba(113,113,122,.2)",
+      fontFamily: "'Syne', sans-serif", fontWeight: 600,
+    }}>
+      Cancelada
+    </span>
+  )}
+
+  {c.estado_cita === "confirmada" && (
+    <span style={{
+      fontSize: 10, padding: "3px 10px", borderRadius: 99,
+      background: "rgba(74,222,128,.08)", color: "#4ade80",
+      border: "1px solid rgba(74,222,128,.2)",
+      fontFamily: "'Syne', sans-serif", fontWeight: 600,
+    }}>
+      ✓ Confirmada
+    </span>
+  )}
+
+  {(!c.estado_cita || c.estado_cita === "pendiente") && (
+    <>
+      <button
+        onClick={(e) => handleConfirmar(c, e)}
+        style={{
+          fontSize: 10, padding: "3px 10px", borderRadius: 99,
+          background: "rgba(74,222,128,.08)", color: "#4ade80",
+          border: "1px solid rgba(74,222,128,.2)",
+          cursor: "pointer",
+          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+        }}
+      >
+        Confirmar
+      </button>
+      <button
+        onClick={(e) => handleCancelar(c, e)}
+        style={{
+          fontSize: 10, padding: "3px 10px", borderRadius: 99,
+          background: "rgba(239,68,68,.08)", color: "#f87171",
+          border: "1px solid rgba(239,68,68,.2)",
+          cursor: "pointer",
+          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+        }}
+      >
+        Cancelar
+      </button>
+    </>
+  )}
+</div>
                       </div>
                     </div>
                   );
@@ -806,18 +1081,12 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
             }}
           >
             {/* Calendario */}
-            <div style={{
-              fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-              color: "#52525b", marginBottom: 14,
-              fontFamily: "'Syne', sans-serif", fontWeight: 700,
-            }}>
-              Calendario
-            </div>
-            <Calendario
-              citas={citas}
-              selectedDay={selectedDay}
-              onSelectDay={handleSelectDay}
-            />
+<CalendarioMensual
+  diasInfo={diasInfoNegocio}
+  selectedDay={selectedDay}
+  onSelectDay={handleSelectDay}
+  bloquearPasado={false}
+/>
 
             <div style={{ height: 1, background: "rgba(255,255,255,.04)", margin: "22px 0" }} />
 
@@ -829,10 +1098,13 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
             }}>
               Detalle
             </div>
-            <DetalleCita cita={selectedCita} />
-
+{selectedDay ? (
+  <AgendaDelDia citas={citas} selectedDay={selectedDay} />
+) : (
+  <DetalleCita cita={selectedCita} />
+)}
             {/* Próximas citas widget */}
-            <ProximasCitas citas={citas} />
+            <ProximasCitas citas={citas} cp={cp} cs={cs} />
           </div>
         </div>
       </main>

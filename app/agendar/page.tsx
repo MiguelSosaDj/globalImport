@@ -24,6 +24,7 @@ export default function AgendarPage() {
   const [negocios, setNegocios] = useState<Negocio[]>([]);
   const [negocioSeleccionado, setNegocioSeleccionado] = useState<Negocio | null>(null);
   const [cargandoNegocios, setCargandoNegocios] = useState(false);
+  const [ultimoTelefono, setUltimoTelefono] = useState("");
 
   const servicios = negocioSeleccionado
     ? SERVICIOS_POR_TIPO[negocioSeleccionado.tipo] || []
@@ -38,7 +39,6 @@ export default function AgendarPage() {
   });
   const [estado, setEstado] = useState<"idle" | "cargando" | "ok" | "error">("idle");
 
-  // Cargar negocios cuando cambia el tipo
   useEffect(() => {
     async function cargarNegocios() {
       setCargandoNegocios(true);
@@ -86,13 +86,21 @@ export default function AgendarPage() {
     const { error } = await supabase.from("citas").insert({
       ...form,
       negocio_id: negocioSeleccionado.id,
+      estado_cita: "pendiente",
     });
 
     if (error) {
       setEstado("error");
     } else {
+      setUltimoTelefono(form.cliente_telefono);
       setEstado("ok");
-      setForm({ cliente_nombre: "", cliente_telefono: "", servicio: servicios[0] || "", fecha: "", hora: "" });
+      setForm({
+        cliente_nombre: "",
+        cliente_telefono: "",
+        servicio: servicios[0] || "",
+        fecha: "",
+        hora: "",
+      });
     }
   }
 
@@ -167,100 +175,133 @@ export default function AgendarPage() {
         {/* PASO 2 — Formulario de cita */}
         {paso === "formulario" && (
           <>
+            {/* Mensaje de éxito */}
             {estado === "ok" && (
-              <div className="mb-6 bg-green-500/10 text-green-400 text-sm px-4 py-3 rounded-xl border border-green-500/20">
-                Cita agendada correctamente. Te esperamos.
+              <div className="mb-6 bg-green-500/10 border border-green-500/20 rounded-xl p-5 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-400 text-lg">✅</span>
+                  <span className="text-green-400 text-sm font-semibold">
+                    Cita agendada correctamente
+                  </span>
+                </div>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Nos comunicaremos contigo al numero{" "}
+                  <span className="text-white font-medium">{ultimoTelefono}</span>{" "}
+                  por WhatsApp para confirmar tu cita.
+                </p>
+                <p className="text-zinc-600 text-xs">
+                  Si no recibes mensaje en los proximos minutos, escribenos directamente.
+                </p>
               </div>
             )}
+
+            {/* Mensaje de error */}
             {estado === "error" && (
               <div className="mb-6 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20">
                 Algo salio mal. Intenta de nuevo.
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-              <div>
-                <label className="text-sm font-medium text-zinc-400">Nombre completo</label>
-                <input
-                  name="cliente_nombre"
-                  value={form.cliente_nombre}
-                  onChange={handleChange}
-                  required
-                  placeholder="Juan Perez"
-                  className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-zinc-400">Telefono</label>
-                <input
-                  name="cliente_telefono"
-                  value={form.cliente_telefono}
-                  onChange={handleChange}
-                  required
-                  placeholder="3001234567"
-                  className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-zinc-400">Servicio</label>
-                <select
-                  name="servicio"
-                  value={form.servicio}
-                  onChange={handleChange}
-                  className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
-                >
-                  {servicios.map((s) => (
-                    <option key={s} value={s} className="bg-zinc-900 text-white">
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+            {/* Formulario — se oculta cuando queda ok */}
+            {estado !== "ok" && (
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div>
-                  <label className="text-sm font-medium text-zinc-400">Fecha</label>
+                  <label className="text-sm font-medium text-zinc-400">Nombre completo</label>
                   <input
-                    type="date"
-                    name="fecha"
-                    value={form.fecha}
+                    name="cliente_nombre"
+                    value={form.cliente_nombre}
                     onChange={handleChange}
                     required
-                    className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                    placeholder="Juan Perez"
+                    className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
                   />
                 </div>
+
                 <div>
-                  <label className="text-sm font-medium text-zinc-400">Hora</label>
+                  <label className="text-sm font-medium text-zinc-400">Telefono</label>
                   <input
-                    type="time"
-                    name="hora"
-                    value={form.hora}
+                    name="cliente_telefono"
+                    value={form.cliente_telefono}
                     onChange={handleChange}
                     required
-                    className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                    placeholder="3001234567"
+                    className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
                   />
                 </div>
-              </div>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setPaso("seleccion")}
-                  className="w-1/3 border border-white/10 text-zinc-400 hover:text-white text-sm font-medium py-3 rounded-xl transition-colors"
-                >
-                  Atras
-                </button>
-                <button
-                  type="submit"
-                  disabled={estado === "cargando"}
-                  className="w-2/3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
-                >
-                  {estado === "cargando" ? "Agendando..." : "Confirmar cita"}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label className="text-sm font-medium text-zinc-400">Servicio</label>
+                  <select
+                    name="servicio"
+                    value={form.servicio}
+                    onChange={handleChange}
+                    className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                  >
+                    {servicios.map((s) => (
+                      <option key={s} value={s} className="bg-zinc-900 text-white">
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-zinc-400">Fecha</label>
+                    <input
+                      type="date"
+                      name="fecha"
+                      value={form.fecha}
+                      onChange={handleChange}
+                      required
+                      className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-zinc-400">Hora</label>
+                    <input
+                      type="time"
+                      name="hora"
+                      value={form.hora}
+                      onChange={handleChange}
+                      required
+                      className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaso("seleccion")}
+                    className="w-1/3 border border-white/10 text-zinc-400 hover:text-white text-sm font-medium py-3 rounded-xl transition-colors"
+                  >
+                    Atras
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={estado === "cargando"}
+                    className="w-2/3 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+                  >
+                    {estado === "cargando" ? "Agendando..." : "Confirmar cita"}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Botón para agendar otra cita */}
+            {estado === "ok" && (
+              <button
+                onClick={() => {
+                  setEstado("idle");
+                  setPaso("seleccion");
+                  setNegocioSeleccionado(null);
+                }}
+                className="w-full mt-2 border border-white/10 text-zinc-400 hover:text-white text-sm font-medium py-3 rounded-xl transition-colors"
+              >
+                Agendar otra cita
+              </button>
+            )}
           </>
         )}
       </div>
