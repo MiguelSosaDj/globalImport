@@ -66,39 +66,50 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Suscripción creada o actualizada ────────────────────────────────────
-  if (
-    event.type === "customer.subscription.created" ||
-    event.type === "customer.subscription.updated"
-  ) {
-    const subscription = event.data.object as Stripe.Subscription;
-    const plan = subscription.metadata?.plan || "basico";
-    const status =
-      subscription.status === "active" || subscription.status === "trialing"
-        ? "activo"
-        : "inactivo";
+  // ── Suscripción creada o actualizada ────────────────────────────────────
+if (
+  event.type === "customer.subscription.created" ||
+  event.type === "customer.subscription.updated"
+) {
+  const subscription = event.data.object as Stripe.Subscription;
 
-    const { error } = await supabaseAdmin
-      .from("negocios")
-      .update({
-        plan,
-        subscription_status: status,
-        stripe_subscription_id: subscription.id,
-        stripe_customer_id: subscription.customer as string,
-        subscription_start: new Date(
-          subscription.current_period_start * 1000
-        ).toISOString(),
-        subscription_end: new Date(
-          subscription.current_period_end * 1000
-        ).toISOString(),
-      })
-      .eq("stripe_customer_id", subscription.customer as string);
+  const subscriptionItem = subscription.items.data[0];
 
-    if (error) {
-      console.error("Error actualizando suscripción en negocios:", error);
-    } else {
-      console.log(`Suscripción ${event.type} procesada — plan: ${plan}, status: ${status}`);
-    }
+  const subscriptionStart = subscriptionItem?.current_period_start
+    ? new Date(subscriptionItem.current_period_start * 1000).toISOString()
+    : null;
+
+  const subscriptionEnd = subscriptionItem?.current_period_end
+    ? new Date(subscriptionItem.current_period_end * 1000).toISOString()
+    : null;
+
+  const plan = subscription.metadata?.plan || "basico";
+
+  const status =
+    subscription.status === "active" || subscription.status === "trialing"
+      ? "activo"
+      : "inactivo";
+
+  const { error } = await supabaseAdmin
+    .from("negocios")
+    .update({
+      plan,
+      subscription_status: status,
+      stripe_subscription_id: subscription.id,
+      stripe_customer_id: subscription.customer as string,
+      subscription_start: subscriptionStart,
+      subscription_end: subscriptionEnd,
+    })
+    .eq("stripe_customer_id", subscription.customer as string);
+
+  if (error) {
+    console.error("Error actualizando suscripción en negocios:", error);
+  } else {
+    console.log(
+      `Suscripción ${event.type} procesada — plan: ${plan}, status: ${status}`
+    );
   }
+}
 
   // ── Suscripción cancelada ────────────────────────────────────────────────
   if (event.type === "customer.subscription.deleted") {
