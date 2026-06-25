@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) throw new Error(error.message);
+    
 
     return NextResponse.json({ negocio: data });
   } catch (error: any) {
