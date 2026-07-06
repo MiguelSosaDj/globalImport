@@ -27,6 +27,8 @@ export default async function DashboardPage() {
     .eq("user_id", user.id)
     .single();
 
+
+    
   const { data: citas } = await supabase
     .from("citas")
     .select("*")
