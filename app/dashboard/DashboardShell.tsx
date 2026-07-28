@@ -9,6 +9,7 @@ import {
   IconPagos,
   IconPaquetes,
   IconReportes,
+  IconRecordatorio,
   IconMensajes,
   IconConfiguracion,
 } from "@/app/components/ui/Icons";
@@ -20,7 +21,8 @@ export type DashboardSeccion =
   | "profesionales"
   | "pacientes"
   | "paquetes"
-  | "reportes";
+  | "reportes"
+  | "recordatorios";
 
 interface NavItem {
   id: DashboardSeccion | string;
@@ -38,6 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "pagos", label: "Pagos", icon: IconPagos, disponible: false },
   { id: "paquetes", label: "Paquetes", icon: IconPaquetes, disponible: true },
   { id: "reportes", label: "Reportes", icon: IconReportes, disponible: true },
+  { id: "recordatorios", label: "Recordatorios", icon: IconRecordatorio, disponible: true },
   { id: "mensajes", label: "Mensajes", icon: IconMensajes, disponible: false },
   { id: "configuracion", label: "Configuración", icon: IconConfiguracion, disponible: false },
 ];

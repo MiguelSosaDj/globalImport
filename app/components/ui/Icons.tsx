@@ -88,6 +88,16 @@ export function IconReportes({ size = 18, className }: IconProps) {
   );
 }
 
+export function IconRecordatorio({ size = 18, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>
+      <path d="M18 8.5a6 6 0 10-12 0c0 7-3 8.5-3 8.5h18s-3-1.5-3-8.5" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+      <circle cx="18.5" cy="5.5" r="3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function IconMensajes({ size = 18, className }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} {...base}>

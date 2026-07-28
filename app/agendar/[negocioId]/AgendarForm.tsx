@@ -127,6 +127,7 @@ export default function AgendarForm({
   const [form, setForm] = useState({
     cliente_nombre: "",
     cliente_telefono: "",
+    cliente_correo: "",
     servicio: servicios[0],
     fecha: "",
     hora: "",
@@ -215,6 +216,7 @@ const diasInfo = useMemo(() => {
             negocioId: negocio.id,
             clienteNombre: form.cliente_nombre,
             clienteTelefono: form.cliente_telefono,
+            clienteCorreo: form.cliente_correo || null,
             servicio: form.servicio,
             fecha: form.fecha,
             hora: form.hora,
@@ -249,6 +251,7 @@ const diasInfo = useMemo(() => {
             negocio_id: negocio.id,
             cliente_nombre: form.cliente_nombre,
             cliente_telefono: form.cliente_telefono,
+            cliente_correo: form.cliente_correo || null,
             servicio: form.servicio,
             fecha,
             hora: form.hora,
@@ -292,6 +295,7 @@ const diasInfo = useMemo(() => {
         setForm({
           cliente_nombre: "",
           cliente_telefono: "",
+          cliente_correo: "",
           servicio: servicios[0],
           fecha: "",
           hora: "",
@@ -392,6 +396,20 @@ const diasInfo = useMemo(() => {
                 onChange={handleChange}
                 required
                 placeholder="3001234567"
+                className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-slate-600">
+                Correo <span className="text-slate-400 font-normal">(opcional, para recordatorios)</span>
+              </label>
+              <input
+                name="cliente_correo"
+                type="email"
+                value={form.cliente_correo}
+                onChange={handleChange}
+                placeholder="tu@email.com"
                 className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { Card } from "@/app/components/ui/Card";
+import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Input, Select } from "@/app/components/ui/Input";
@@ -86,6 +86,16 @@ function formatCOP(valor: number) {
     currency: "COP",
     minimumFractionDigits: 0,
   }).format(valor);
+}
+
+function iniciales(nombre: string) {
+  return nombre
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 }
 
 function badgeEstado(estado?: string) {
@@ -191,57 +201,57 @@ export default function CitasConfig({
         </Select>
       </div>
 
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
-                <th className="px-4 py-3 font-semibold">Fecha</th>
-                <th className="px-4 py-3 font-semibold">Cliente</th>
-                <th className="px-4 py-3 font-semibold">Servicio</th>
-                <th className="px-4 py-3 font-semibold">Estado</th>
-                <th className="px-4 py-3 font-semibold text-right">Pago</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtradas.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-10 text-center text-slate-400">
-                    Sin citas para mostrar
-                  </td>
-                </tr>
-              ) : (
-                filtradas.map((c) => (
-                  <tr key={c.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
-                      {c.fecha} · {c.hora}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-slate-900 font-medium">{c.cliente_nombre}</div>
-                      <div className="text-xs text-slate-400">{c.cliente_telefono}</div>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">{c.servicio}</td>
-                    <td className="px-4 py-3">{badgeEstado(c.estado_cita)}</td>
-                    <td className="px-4 py-3 text-right">
-                      {c.estado_pago === "pagado" ? (
-                        <span className="text-green-700 font-medium">
-                          ✓ {formatCOP(c.monto || 0)}
-                        </span>
-                      ) : (
-                        <MarcarPago
-                          citaId={c.id}
-                          montoActual={c.monto}
-                          montoSugerido={montoSugeridoPara(c)}
-                        />
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {filtradas.length === 0 ? (
+        <Card className="text-center py-10 px-6 border-dashed">
+          <p className="text-sm text-slate-500">Sin citas para mostrar</p>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {filtradas.map((c) => (
+            <Card key={c.id}>
+              <CardBody className="!p-4 sm:!p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {iniciales(c.cliente_nombre)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-slate-900 truncate">
+                        {c.cliente_nombre}
+                      </p>
+                      <p className="text-xs text-slate-400">{c.cliente_telefono}</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">{badgeEstado(c.estado_cita)}</div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                  <span className="font-medium text-slate-700">
+                    {c.fecha} · {c.hora}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span>{c.servicio}</span>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <span className="text-xs text-slate-400">Pago</span>
+                  {c.estado_pago === "pagado" ? (
+                    <span className="text-sm text-green-700 font-medium">
+                      ✓ {formatCOP(c.monto || 0)}
+                    </span>
+                  ) : (
+                    <MarcarPago
+                      citaId={c.id}
+                      montoActual={c.monto}
+                      montoSugerido={montoSugeridoPara(c)}
+                    />
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          ))}
         </div>
-      </Card>
+      )}
     </div>
   );
 }

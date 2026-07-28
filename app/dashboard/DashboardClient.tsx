@@ -10,6 +10,7 @@ import PacientesConfig from "./PacientesConfig";
 import PaquetesConfig from "./PaquetesConfig";
 import ReportesConfig from "./ReportesConfig";
 import CitasConfig from "./CitasConfig";
+import RecordatoriosConfig from "./RecordatoriosConfig";
 import DashboardShell, { type DashboardSeccion } from "./DashboardShell";
 import CalendarioMensual from "@/app/components/CalendarioMensual";
 import {
@@ -46,6 +47,7 @@ interface Cita {
   monto?: number | null;
   estado_pago?: string | null;
   paquete_id?: string | null;
+  recordatorio_enviado?: boolean;
 }
 interface Props {
   negocio: Negocio | null;
@@ -765,7 +767,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
               Citas
             </h1>
             <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
-              Todas tus citas en formato de tabla
+              Todas tus citas de un vistazo
             </p>
           </div>
           <CitasConfig citas={citas} negocioId={negocio?.id ?? ""} />
@@ -844,6 +846,25 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
             </p>
           </div>
           <ReportesConfig citas={citas} />
+        </div>
+      ) : seccionActiva === "recordatorios" ? (
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Recordatorios
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Citas confirmadas para mañana — envíalas por WhatsApp con un clic
+            </p>
+          </div>
+          <RecordatoriosConfig
+            negocioId={negocio?.id ?? ""}
+            negocioNombre={negocio?.nombre}
+            citas={citas}
+          />
         </div>
       ) : (
         <div
