@@ -166,7 +166,7 @@ export default function CitasConfig({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row gap-3">
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -176,7 +176,7 @@ export default function CitasConfig({
         <Select
           value={filtroEstado}
           onChange={(e) => setFiltroEstado(e.target.value)}
-          className="w-48 flex-shrink-0"
+          className="sm:w-48 sm:flex-shrink-0"
         >
           <option value="">Todos los estados</option>
           <option value="pendiente">Pendiente</option>

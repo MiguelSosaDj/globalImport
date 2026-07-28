@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 
 const TIPOS_NEGOCIO = ["barberia", "medico", "mecanico", "fisioterapia", "masajista"];
 const NEQUI_NUMERO = "3013423627";
+const MAX_COMPROBANTE_MB = 4;
+const SOLICITUD_TIMEOUT_MS = 30000;
 
 const PLANES = [
   {
@@ -69,10 +71,11 @@ function formatCOP(valor: number) {
 interface ModalCheckoutProps {
   plan: { nombre: string; precio: number };
   priceId: string;
+  periodo: "mensual" | "anual";
   onClose: () => void;
 }
 
-function ModalCheckout({ plan, priceId, onClose }: ModalCheckoutProps) {
+function ModalCheckout({ plan, priceId, periodo, onClose }: ModalCheckoutProps) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -129,7 +132,7 @@ function ModalCheckout({ plan, priceId, onClose }: ModalCheckoutProps) {
         <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center justify-between">
           <span className="text-sm text-slate-600">Después del trial</span>
           <span className="text-sm font-semibold text-slate-900">
-            {formatCOP(plan.precio)}/mes
+            {formatCOP(plan.precio)}{periodo === "anual" ? "/año" : "/mes"}
           </span>
         </div>
 
@@ -221,9 +224,16 @@ function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
       setError("Debes adjuntar el comprobante de pago");
       return;
     }
+    if (comprobante.size > MAX_COMPROBANTE_MB * 1024 * 1024) {
+      setError(`La imagen pesa demasiado (máx. ${MAX_COMPROBANTE_MB}MB). Toma la foto con menor calidad o recórtala.`);
+      return;
+    }
 
     setEnviando(true);
     setError("");
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), SOLICITUD_TIMEOUT_MS);
 
     try {
       const body = new FormData();
@@ -239,6 +249,7 @@ function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
       const res = await fetch("/api/suscripciones/solicitar", {
         method: "POST",
         body,
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -246,8 +257,14 @@ function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
 
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      if (err.name === "AbortError") {
+        setError("La solicitud tardó demasiado. Verifica tu conexión e intenta de nuevo.");
+      } else {
+        setError(err.message || "Error al enviar la solicitud");
+      }
       setEnviando(false);
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -313,7 +330,7 @@ function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
               className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-slate-500">Nombre del negocio</label>
               <input
@@ -345,7 +362,17 @@ function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
             <input
               type="file"
               accept="image/*"
-              onChange={(e) => setComprobante(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                if (file && file.size > MAX_COMPROBANTE_MB * 1024 * 1024) {
+                  setError(`La imagen pesa demasiado (máx. ${MAX_COMPROBANTE_MB}MB). Toma la foto con menor calidad o recórtala.`);
+                  setComprobante(null);
+                  e.target.value = "";
+                  return;
+                }
+                setError("");
+                setComprobante(file);
+              }}
               className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:text-sm"
             />
           </div>
@@ -402,6 +429,7 @@ export default function PlanesSection() {
         <ModalCheckout
           plan={{ nombre: modalData.planNombre, precio: modalData.precio }}
           priceId={modalData.priceId}
+          periodo={anual ? "anual" : "mensual"}
           onClose={() => setModalData(null)}
         />
       )}
@@ -439,7 +467,12 @@ export default function PlanesSection() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {PLANES.map((plan) => {
-          const precio = anual ? plan.anual.porMes : plan.mensual.precio;
+          // El precio mostrado y el que se envía a los modales de pago
+          // (Stripe/Nequi) es el monto real a cobrar en ese periodo: el
+          // total anual cuando está en modo Anual, no el equivalente
+          // mensual — a un cliente pagando por Nequi hay que pedirle el
+          // valor completo que realmente va a transferir.
+          const precio = anual ? plan.anual.precio : plan.mensual.precio;
           const priceId = anual ? plan.anual.priceId : plan.mensual.priceId;
 
           return (
@@ -469,11 +502,11 @@ export default function PlanesSection() {
                   <span className="text-3xl font-bold text-slate-900">
                     {formatCOP(precio)}
                   </span>
-                  <span className="text-sm text-slate-500">/mes</span>
+                  <span className="text-sm text-slate-500">{anual ? "/año" : "/mes"}</span>
                 </div>
                 {anual && (
                   <p className="text-xs text-green-600">
-                    {formatCOP(plan.anual.precio)} facturado anualmente
+                    Equivale a {formatCOP(plan.anual.porMes)}/mes
                   </p>
                 )}
               </div>

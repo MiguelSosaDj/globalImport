@@ -261,7 +261,7 @@ export default function PaquetesConfig({
                   ))}
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Número de sesiones</Label>
                   <Input

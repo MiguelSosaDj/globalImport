@@ -190,7 +190,7 @@ export default function PacientesConfig({
         <Card>
           <CardBody>
             <form onSubmit={crear} className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Nombre</Label>
                   <Input
@@ -209,7 +209,7 @@ export default function PacientesConfig({
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Teléfono</Label>
                   <Input
@@ -273,7 +273,7 @@ export default function PacientesConfig({
             return (
               <Card key={p.id} className={!p.activo ? "opacity-60" : ""}>
                 <CardBody>
-                  <div className="flex items-center justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm font-semibold text-slate-900 truncate">
@@ -286,8 +286,8 @@ export default function PacientesConfig({
                         {p.numero_documento && ` · ${p.numero_documento}`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <div className="text-right">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                      <div className="text-left sm:text-right">
                         <p className="text-xs text-slate-500">
                           {citasPaciente.length} cita{citasPaciente.length !== 1 ? "s" : ""}
                         </p>

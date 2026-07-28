@@ -282,7 +282,7 @@ export default function ProfesionalesConfig({ negocioId }: { negocioId: string }
           {profesionales.map((p) => (
             <Card key={p.id} className={!p.activo ? "opacity-60" : ""}>
               <CardBody>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
@@ -333,7 +333,7 @@ export default function ProfesionalesConfig({ negocioId }: { negocioId: string }
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Apellidos (opcional)</Label>
                   <Input

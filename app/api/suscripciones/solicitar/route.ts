@@ -34,6 +34,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const MAX_COMPROBANTE_BYTES = 4 * 1024 * 1024;
+    if (comprobante.size > MAX_COMPROBANTE_BYTES) {
+      return NextResponse.json(
+        { error: "El comprobante pesa demasiado (máx. 4MB)" },
+        { status: 400 }
+      );
+    }
+
     const supabaseAdmin = createSupabaseAdmin();
 
     const ext = comprobante.name.split(".").pop() || "jpg";

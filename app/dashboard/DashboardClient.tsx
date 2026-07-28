@@ -75,12 +75,14 @@ const GLOBAL_CSS = (cp: string, cs: string) => `
   ::-webkit-scrollbar-thumb { background: ${cp}4d; border-radius: 99px; }
 
   .cita-row {
-    transition: background .15s, border-color .15s, transform .1s;
+    transition: background .15s, border-color .15s, transform .1s, box-shadow .2s;
+    box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 4px 14px -6px ${cp}26;
   }
   .cita-row:hover {
     border-color: ${cp}66 !important;
     background: ${cp}0d !important;
     transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(15,23,42,.05), 0 8px 20px -6px ${cp}40;
   }
   .cal-day {
     transition: background .12s, color .12s;
@@ -114,10 +116,13 @@ const GLOBAL_CSS = (cp: string, cs: string) => `
   }
   .pulse { animation: pulse-dot 2s ease-in-out infinite; }
 
+  .seccion-padding { padding: 32px 36px; }
+
   @media (max-width: 768px) {
     .dashboard-grid { grid-template-columns: 1fr !important; }
     .stats-grid { grid-template-columns: 1fr 1fr !important; }
     .sidebar { display: none !important; }
+    .seccion-padding { padding: 20px 16px !important; }
   }
 `;
 
@@ -719,7 +724,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
       </div>
 
       {seccionActiva === "citas" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -734,7 +739,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           <CitasConfig citas={citas} negocioId={negocio?.id ?? ""} />
         </div>
       ) : seccionActiva === "servicios" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -749,7 +754,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           <ServiciosConfig negocioId={negocio?.id ?? ""} />
         </div>
       ) : seccionActiva === "profesionales" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -764,7 +769,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           <ProfesionalesConfig negocioId={negocio?.id ?? ""} />
         </div>
       ) : seccionActiva === "pacientes" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -779,7 +784,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           <PacientesConfig negocioId={negocio?.id ?? ""} citas={citas} />
         </div>
       ) : seccionActiva === "paquetes" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -794,7 +799,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           <PaquetesConfig negocioId={negocio?.id ?? ""} negocioNombre={negocio?.nombre} />
         </div>
       ) : seccionActiva === "reportes" ? (
-        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+        <div className="seccion-padding" style={{ position: "relative", zIndex: 1 }}>
           <div style={{ marginBottom: 24 }}>
             <h1 style={{
               fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
@@ -818,8 +823,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
           }}
         >
           {/* ── Columna izquierda ── */}
-          <div style={{
-            padding: "32px 36px",
+          <div className="seccion-padding" style={{
             borderRight: "1px solid #e2e8f0",
             overflowY: "auto",
           }}>
@@ -1060,7 +1064,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
                       style={{
                         background: isSel ? `${cp}0d` : "#ffffff",
                         border: `1px solid ${isSel ? `${cp}66` : "#e2e8f0"}`,
-                        borderRadius: 14, padding: "14px 18px",
+                        borderRadius: 16, padding: "14px 18px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer",
                         opacity: isPast ? 0.6 : 1,
