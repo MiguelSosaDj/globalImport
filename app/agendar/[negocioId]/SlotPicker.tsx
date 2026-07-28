@@ -43,7 +43,7 @@ export default function SlotPicker({
   if (!fecha) {
     return (
       <div style={{
-        textAlign: "center", padding: "20px", color: "#52525b",
+        textAlign: "center", padding: "20px", color: "#64748b",
         fontSize: 12, fontFamily: "system-ui",
       }}>
         Selecciona una fecha primero
@@ -53,7 +53,7 @@ export default function SlotPicker({
 
   if (cargando) {
     return (
-      <div style={{ textAlign: "center", padding: "20px", color: "#52525b", fontSize: 12 }}>
+      <div style={{ textAlign: "center", padding: "20px", color: "#64748b", fontSize: 12 }}>
         Cargando horarios...
       </div>
     );
@@ -62,9 +62,9 @@ export default function SlotPicker({
   if (slots.length === 0) {
     return (
       <div style={{
-        textAlign: "center", padding: "20px", color: "#71717a",
-        fontSize: 12, background: "rgba(255,255,255,.02)",
-        border: "1px dashed rgba(255,255,255,.08)", borderRadius: 10,
+        textAlign: "center", padding: "20px", color: "#64748b",
+        fontSize: 12, background: "#f8fafc",
+        border: "1px dashed #cbd5e1", borderRadius: 10,
       }}>
         El negocio no atiende este día
       </div>
@@ -89,17 +89,17 @@ export default function SlotPicker({
               fontFamily: "monospace", fontWeight: 600,
               cursor: s.disponible ? "pointer" : "not-allowed",
               background: isSel
-                ? "rgba(124,58,237,.6)"
+                ? "#2563eb"
                 : s.disponible
-                ? "rgba(255,255,255,.04)"
-                : "rgba(239,68,68,.05)",
-              color: isSel ? "#fff" : s.disponible ? "#e4e4e7" : "#52525b",
+                ? "#f8fafc"
+                : "#fef2f2",
+              color: isSel ? "#fff" : s.disponible ? "#1e293b" : "#94a3b8",
               border: `1px solid ${
                 isSel
-                  ? "rgba(124,58,237,.8)"
+                  ? "#2563eb"
                   : s.disponible
-                  ? "rgba(255,255,255,.08)"
-                  : "rgba(239,68,68,.15)"
+                  ? "#e2e8f0"
+                  : "#fecaca"
               }`,
               textDecoration: s.disponible ? "none" : "line-through",
               transition: "all .15s",

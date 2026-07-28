@@ -1,31 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireOwnNegocio } from "@/lib/auth-negocio";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseAdmin = createSupabaseAdmin();
-
     const { negocioId, colorPrimario, colorSecundario } = await req.json();
 
-    if (!negocioId) {
-      return NextResponse.json({ error: "Falta negocioId" }, { status: 400 });
-    }
+    const auth = await requireOwnNegocio(negocioId);
+    if (auth.error) return auth.error;
 
+    const supabaseAdmin = createSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("negocios")
       .update({

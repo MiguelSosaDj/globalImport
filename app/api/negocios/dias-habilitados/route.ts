@@ -1,20 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET(req: NextRequest) {
   try {

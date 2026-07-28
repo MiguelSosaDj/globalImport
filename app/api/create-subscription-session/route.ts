@@ -1,31 +1,6 @@
-import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function createStripe() {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-  if (!stripeSecretKey) {
-    throw new Error("Falta STRIPE_SECRET_KEY");
-  }
-
-  return new Stripe(stripeSecretKey);
-}
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+import { createStripe } from "@/lib/stripe";
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(req: NextRequest) {
   try {

@@ -76,8 +76,8 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
 
   return (
     <div style={{
-      background: "#0a0a0a",
-      border: "1px solid rgba(255,255,255,.05)",
+      background: "#f8fafc",
+      border: "1px solid #e2e8f0",
       borderRadius: 14, marginBottom: 28, overflow: "hidden",
     }}>
       <button
@@ -90,11 +90,11 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
       >
         <div style={{
           fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-          color: "#7c3aed", fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          color: "#2563eb", fontFamily: "'Syne', sans-serif", fontWeight: 700,
         }}>
           🕐 Horarios de disponibilidad
         </div>
-        <span style={{ color: "#52525b", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
+        <span style={{ color: "#94a3b8", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
       </button>
 
       {abierto && (
@@ -102,7 +102,7 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
           {/* Duración de cita */}
           <div style={{ marginBottom: 16 }}>
             <label style={{
-              fontSize: 11, color: "#71717a", fontFamily: "'Syne', sans-serif",
+              fontSize: 11, color: "#64748b", fontFamily: "'Syne', sans-serif",
               fontWeight: 600, display: "block", marginBottom: 6,
             }}>
               Duración de cada cita
@@ -112,8 +112,8 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
               onChange={(e) => setDuracion(Number(e.target.value))}
               style={{
                 width: "100%", padding: "8px 12px", borderRadius: 8,
-                background: "#0f0f0f", border: "1px solid rgba(255,255,255,.08)",
-                color: "#fff", fontSize: 12, fontFamily: "'DM Mono', monospace",
+                background: "#ffffff", border: "1px solid #cbd5e1",
+                color: "#0f172a", fontSize: 12, fontFamily: "'DM Mono', monospace",
               }}
             >
               {DURACIONES.map((d) => (
@@ -130,18 +130,18 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
                 style={{
                   display: "flex", alignItems: "center", gap: 10,
                   padding: "8px 10px", borderRadius: 10,
-                  background: h.activo ? "rgba(124,58,237,.05)" : "#0f0f0f",
-                  border: `1px solid ${h.activo ? "rgba(124,58,237,.2)" : "rgba(255,255,255,.04)"}`,
+                  background: h.activo ? "rgba(37,99,235,.05)" : "#ffffff",
+                  border: `1px solid ${h.activo ? "rgba(37,99,235,.2)" : "#e2e8f0"}`,
                 }}
               >
                 <input
                   type="checkbox"
                   checked={h.activo}
                   onChange={(e) => actualizarDia(h.dia_semana, "activo", e.target.checked)}
-                  style={{ accentColor: "#7c3aed", width: 14, height: 14 }}
+                  style={{ accentColor: "#2563eb", width: 14, height: 14 }}
                 />
                 <span style={{
-                  fontSize: 11, color: h.activo ? "#e4e4e7" : "#52525b",
+                  fontSize: 11, color: h.activo ? "#1e293b" : "#94a3b8",
                   fontFamily: "'Syne', sans-serif", fontWeight: 600, width: 80, flexShrink: 0,
                 }}>
                   {DIAS[h.dia_semana]}
@@ -153,12 +153,12 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
                   onChange={(e) => actualizarDia(h.dia_semana, "hora_inicio", e.target.value)}
                   style={{
                     padding: "5px 8px", borderRadius: 6, fontSize: 11,
-                    background: "#0a0a0a", border: "1px solid rgba(255,255,255,.06)",
-                    color: h.activo ? "#fff" : "#3f3f46",
+                    background: "#ffffff", border: "1px solid #e2e8f0",
+                    color: h.activo ? "#0f172a" : "#cbd5e1",
                     fontFamily: "'DM Mono', monospace",
                   }}
                 />
-                <span style={{ color: "#52525b", fontSize: 11 }}>—</span>
+                <span style={{ color: "#94a3b8", fontSize: 11 }}>—</span>
                 <input
                   type="time"
                   value={h.hora_fin}
@@ -166,8 +166,8 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
                   onChange={(e) => actualizarDia(h.dia_semana, "hora_fin", e.target.value)}
                   style={{
                     padding: "5px 8px", borderRadius: 6, fontSize: 11,
-                    background: "#0a0a0a", border: "1px solid rgba(255,255,255,.06)",
-                    color: h.activo ? "#fff" : "#3f3f46",
+                    background: "#ffffff", border: "1px solid #e2e8f0",
+                    color: h.activo ? "#0f172a" : "#cbd5e1",
                     fontFamily: "'DM Mono', monospace",
                   }}
                 />
@@ -181,8 +181,8 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
             style={{
               marginTop: 16, width: "100%", padding: "10px",
               borderRadius: 10, border: "none", cursor: "pointer",
-              background: guardado ? "rgba(74,222,128,.15)" : "rgba(124,58,237,.6)",
-              color: guardado ? "#4ade80" : "#fff",
+              background: guardado ? "rgba(22,163,74,.15)" : "#2563eb",
+              color: guardado ? "#16a34a" : "#fff",
               fontSize: 12, fontWeight: 600, fontFamily: "'Syne', sans-serif",
             }}
           >

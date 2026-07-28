@@ -45,7 +45,7 @@ export default function CalendarioMensual({
   onSelectDay,
   soloMostrarHabilitados = false,
   bloquearPasado = true,
-   colorPrimario = "#7c3aed",
+   colorPrimario = "#2563eb",
 }: Props) {
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
@@ -89,8 +89,8 @@ export default function CalendarioMensual({
 
   return (
     <div style={{
-      background: "#0a0a0a",
-      border: "1px solid rgba(255,255,255,.06)",
+      background: "#ffffff",
+      border: "1px solid #e2e8f0",
       borderRadius: 18,
       padding: "20px 18px",
       fontFamily: "'Syne', system-ui, sans-serif",
@@ -103,22 +103,22 @@ export default function CalendarioMensual({
         <button
           onClick={() => changeMonth(-1)}
           style={{
-            background: "#141414", border: "1px solid rgba(255,255,255,.08)",
-            color: "#a1a1aa", width: 34, height: 34, borderRadius: 10,
+            background: "#f8fafc", border: "1px solid #e2e8f0",
+            color: "#475569", width: 34, height: 34, borderRadius: 10,
             cursor: "pointer", fontSize: 18, display: "flex",
             alignItems: "center", justifyContent: "center",
           }}
         >
           ‹
         </button>
-        <span style={{ fontSize: 17, fontWeight: 800, color: "#fff", letterSpacing: -0.3 }}>
+        <span style={{ fontSize: 17, fontWeight: 800, color: "#0f172a", letterSpacing: -0.3 }}>
           {MESES[viewMonth]} {viewYear}
         </span>
         <button
           onClick={() => changeMonth(1)}
           style={{
-            background: "#141414", border: "1px solid rgba(255,255,255,.08)",
-            color: "#a1a1aa", width: 34, height: 34, borderRadius: 10,
+            background: "#f8fafc", border: "1px solid #e2e8f0",
+            color: "#475569", width: 34, height: 34, borderRadius: 10,
             cursor: "pointer", fontSize: 18, display: "flex",
             alignItems: "center", justifyContent: "center",
           }}
@@ -134,7 +134,7 @@ export default function CalendarioMensual({
       }}>
         {DIAS_SEMANA.map((d) => (
           <div key={d} style={{
-            fontSize: 11, color: "#52525b", textAlign: "center",
+            fontSize: 11, color: "#94a3b8", textAlign: "center",
             textTransform: "uppercase", letterSpacing: 1, fontWeight: 700,
             padding: "4px 0",
           }}>
@@ -182,30 +182,30 @@ export default function CalendarioMensual({
                 background: isSel
   ? colorPrimario
   : isToday
-  ? `${colorPrimario}1a`
+  ? `${colorPrimario}14`
   : deshabilitado
   ? "transparent"
-  : "rgba(255,255,255,.02)",
+  : "#ffffff",
 border: isSel
   ? `1px solid ${colorPrimario}`
   : isToday
   ? `1px solid ${colorPrimario}66`
-  : "1px solid rgba(255,255,255,.04)",
+  : "1px solid #e2e8f0",
                 color: isSel
                   ? "#fff"
                   : deshabilitado
-                  ? "#2a2a2e"
+                  ? "#cbd5e1"
                   : isToday
-                  ? "#c084fc"
-                  : "#d4d4d8",
+                  ? colorPrimario
+                  : "#1e293b",
                 transition: "all .12s",
               }}
             >
               {cell.label}
               {cantidadCitas > 0 && !isSel && (
                 <span style={{
-                  fontSize: 8, color: "#a78bfa", fontWeight: 700,
-                  background: "rgba(124,58,237,.15)", borderRadius: 99,
+                  fontSize: 8, color: colorPrimario, fontWeight: 700,
+                  background: `${colorPrimario}1a`, borderRadius: 99,
                   padding: "1px 5px",
                 }}>
                   {cantidadCitas}
@@ -214,7 +214,7 @@ border: isSel
               {soloMostrarHabilitados && info?.habilitado && !isSel && cantidadCitas === 0 && (
                 <span style={{
                   width: 4, height: 4, borderRadius: "50%",
-                  background: "#4ade80",
+                  background: "#22c55e",
                 }} />
               )}
             </button>
@@ -226,15 +226,15 @@ border: isSel
       {soloMostrarHabilitados && (
         <div style={{
           display: "flex", gap: 14, marginTop: 16, paddingTop: 14,
-          borderTop: "1px solid rgba(255,255,255,.05)",
+          borderTop: "1px solid #e2e8f0",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4ade80" }} />
-            <span style={{ fontSize: 10, color: "#71717a" }}>Disponible</span>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#22c55e" }} />
+            <span style={{ fontSize: 10, color: "#64748b" }}>Disponible</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: 2, background: "#2a2a2e" }} />
-            <span style={{ fontSize: 10, color: "#71717a" }}>No disponible</span>
+            <span style={{ width: 8, height: 8, borderRadius: 2, background: "#cbd5e1" }} />
+            <span style={{ fontSize: 10, color: "#64748b" }}>No disponible</span>
           </div>
         </div>
       )}

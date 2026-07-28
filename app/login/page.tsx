@@ -36,29 +36,25 @@ async function handleSubmit(e: React.FormEvent) {
 }
 
   return (
-    <main className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] bg-violet-600/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 bg-white/[0.03] border border-white/10 rounded-2xl p-8 w-full max-w-md">
+    <main className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="relative z-10 bg-white border border-slate-200 shadow-sm rounded-2xl p-8 w-full max-w-md">
         <div className="mb-6">
-          <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Link href="/" className="text-xs text-slate-500 hover:text-slate-700 transition-colors">
             Volver al inicio
           </Link>
-          <h1 className="text-2xl font-bold text-white mt-3">Iniciar sesion</h1>
-          <p className="text-sm text-zinc-500 mt-1">Bienvenido de vuelta</p>
+          <h1 className="text-2xl font-bold text-slate-900 mt-3">Iniciar sesion</h1>
+          <p className="text-sm text-slate-500 mt-1">Bienvenido de vuelta</p>
         </div>
 
         {estado === "error" && (
-          <div className="mb-6 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20">
+          <div className="mb-6 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-200">
             Email o contrasena incorrectos
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <label className="text-sm font-medium text-zinc-400">Email</label>
+            <label className="text-sm font-medium text-slate-600">Email</label>
             <input
               name="email"
               type="email"
@@ -66,12 +62,12 @@ async function handleSubmit(e: React.FormEvent) {
               onChange={handleChange}
               required
               placeholder="negocio@email.com"
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-zinc-400">Contrasena</label>
+            <label className="text-sm font-medium text-slate-600">Contrasena</label>
             <input
               name="password"
               type="password"
@@ -79,21 +75,21 @@ async function handleSubmit(e: React.FormEvent) {
               onChange={handleChange}
               required
               placeholder="Tu contrasena"
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={estado === "cargando"}
-            className="mt-1 w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+            className="mt-1 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
           >
             {estado === "cargando" ? "Entrando..." : "Iniciar sesion"}
           </button>
 
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-slate-500">
             No tienes cuenta?{" "}
-            <Link href="/registro" className="text-violet-400 hover:text-violet-300 transition-colors">
+            <Link href="/registro" className="text-blue-600 hover:text-blue-700 transition-colors">
               Registrate gratis
             </Link>
           </p>

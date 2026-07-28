@@ -4,12 +4,20 @@
 import { useState, useMemo, useEffect } from "react";
 import HorariosConfig from "./HorariosConfig";
 import PersonalizacionConfig from "./PersonalizacionConfig";
+import ServiciosConfig from "./ServiciosConfig";
+import ProfesionalesConfig from "./ProfesionalesConfig";
+import PacientesConfig from "./PacientesConfig";
+import PaquetesConfig from "./PaquetesConfig";
+import ReportesConfig from "./ReportesConfig";
+import CitasConfig from "./CitasConfig";
+import DashboardShell, { type DashboardSeccion } from "./DashboardShell";
 import CalendarioMensual from "@/app/components/CalendarioMensual";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 interface Negocio {
   id: string;
   nombre: string;
   tipo?: string;
+  plan?: string;
   requiere_pago?: boolean;
   duracion_cita?: number;
   logo_url?: string;
@@ -24,6 +32,9 @@ interface Cita {
   fecha: string; // "YYYY-MM-DD"
   hora: string;  // "HH:MM"
     estado_cita?: string; // agrega esta línea
+  monto?: number | null;
+  estado_pago?: string | null;
+  paquete_id?: string | null;
 }
 interface Props {
   negocio: Negocio | null;
@@ -138,8 +149,8 @@ function StatusBadge({ fecha }: { fecha: string }) {
   const esHoy    = fecha === hoy;
   const esFutura = fecha > hoy;
   const label = esHoy ? "Hoy" : esFutura ? "Próxima" : "Pasada";
-  const color = esHoy ? "#4ade80" : esFutura ? "#a78bfa" : "#71717a";
-  const bg    = esHoy ? "rgba(74,222,128,.08)" : esFutura ? "rgba(167,139,250,.08)" : "rgba(113,113,122,.08)";
+  const color = esHoy ? "#16a34a" : esFutura ? "#2563eb" : "#94a3b8";
+  const bg    = esHoy ? "rgba(22,163,74,.08)" : esFutura ? "rgba(37,99,235,.08)" : "rgba(148,163,184,.15)";
   return (
     <span style={{
       fontSize: 10, padding: "2px 7px", borderRadius: 99,
@@ -161,7 +172,7 @@ function AgendaDelDia({ citas, selectedDay }: { citas: Cita[]; selectedDay: stri
 
   return (
     <div style={{
-      background: "#0a0a0a", border: "1px solid rgba(255,255,255,.05)",
+      background: "#f8fafc", border: "1px solid #e2e8f0",
       borderRadius: 14, overflow: "hidden",
     }}>
       {HORAS.map((h) => {
@@ -172,28 +183,28 @@ function AgendaDelDia({ citas, selectedDay }: { citas: Cita[]; selectedDay: stri
             style={{
               display: "flex", alignItems: "center", gap: 10,
               padding: "8px 12px", minHeight: 36,
-              borderBottom: "1px solid rgba(255,255,255,.03)",
-              background: cita ? "rgba(124,58,237,.06)" : "transparent",
+              borderBottom: "1px solid #e2e8f0",
+              background: cita ? "rgba(37,99,235,.06)" : "transparent",
             }}
           >
             <span style={{
-              fontSize: 10, color: "#52525b", width: 44, flexShrink: 0,
+              fontSize: 10, color: "#94a3b8", width: 44, flexShrink: 0,
               fontFamily: "'DM Mono', monospace",
             }}>
               {h % 12 === 0 ? 12 : h % 12}:00 {h >= 12 ? "PM" : "AM"}
             </span>
             {cita ? (
               <div style={{
-                flex: 1, background: "rgba(124,58,237,.15)",
-                border: "1px solid rgba(124,58,237,.3)",
+                flex: 1, background: "rgba(37,99,235,.1)",
+                border: "1px solid rgba(37,99,235,.3)",
                 borderRadius: 6, padding: "4px 8px",
-                fontSize: 11, color: "#e9d5ff",
+                fontSize: 11, color: "#1e40af",
                 fontFamily: "'Syne', sans-serif", fontWeight: 600,
               }}>
                 {cita.cliente_nombre} · {cita.servicio}
               </div>
             ) : (
-              <div style={{ flex: 1, fontSize: 10, color: "#2a2a2e" }}>Libre</div>
+              <div style={{ flex: 1, fontSize: 10, color: "#cbd5e1" }}>Libre</div>
             )}
           </div>
         );
@@ -203,23 +214,23 @@ function AgendaDelDia({ citas, selectedDay }: { citas: Cita[]; selectedDay: stri
 }
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent = false, cp = "#7c3aed", cs = "#a855f7" }: {
+function StatCard({ label, value, sub, accent = false, cp = "#2563eb", cs = "#1d4ed8" }: {
   label: string; value: string; sub?: string; accent?: boolean; cp?: string; cs?: string;
 }) {
   return (
     <div style={{
-      background: accent ? `${cp}0f` : "#0f0f0f",
-      border: `1px solid ${accent ? `${cp}40` : "rgba(255,255,255,.05)"}`,
+      background: accent ? `${cp}0d` : "#ffffff",
+      border: `1px solid ${accent ? `${cp}40` : "#e2e8f0"}`,
       borderRadius: 16, padding: "18px 20px", position: "relative", overflow: "hidden",
     }}>
       <div style={{
         position: "absolute", top: 0, left: 0, right: 0, height: 2,
         background: accent
           ? `linear-gradient(90deg,${cp},${cs})`
-          : "linear-gradient(90deg,#27272a,#3f3f46)",
+          : "linear-gradient(90deg,#e2e8f0,#cbd5e1)",
       }} />
       <div style={{
-        fontSize: 9, color: accent ? cs : "#52525b",
+        fontSize: 9, color: accent ? cs : "#94a3b8",
         textTransform: "uppercase", letterSpacing: 1.2, marginBottom: 10,
         fontFamily: "'Syne', sans-serif", fontWeight: 600,
       }}>
@@ -227,13 +238,13 @@ function StatCard({ label, value, sub, accent = false, cp = "#7c3aed", cs = "#a8
       </div>
       <div style={{
         fontSize: value.length > 10 ? 14 : value.length > 6 ? 18 : 26,
-        fontWeight: 800, color: "#fff", letterSpacing: -0.5, lineHeight: 1.1,
+        fontWeight: 800, color: "#0f172a", letterSpacing: -0.5, lineHeight: 1.1,
         fontFamily: "'Syne', sans-serif",
       }}>
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 11, color: "#71717a", marginTop: 5, fontFamily: "'DM Mono', monospace" }}>
+        <div style={{ fontSize: 11, color: "#64748b", marginTop: 5, fontFamily: "'DM Mono', monospace" }}>
           {sub}
         </div>
       )}
@@ -385,8 +396,8 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
   if (!cita) {
     return (
       <div style={{
-        textAlign: "center", padding: "32px 12px", color: "#3f3f46",
-        background: "#0a0a0a", border: "1px solid rgba(255,255,255,.03)",
+        textAlign: "center", padding: "32px 12px", color: "#94a3b8",
+        background: "#f8fafc", border: "1px solid #e2e8f0",
         borderRadius: 14, fontSize: 12, fontFamily: "'Syne', sans-serif",
       }}>
         <div style={{ fontSize: 28, marginBottom: 8 }}>👆</div>
@@ -404,20 +415,20 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
 
   return (
     <div className="fade-in" style={{
-      background: "#0a0a0a",
-      border: "1px solid rgba(255,255,255,.05)",
+      background: "#ffffff",
+      border: "1px solid #e2e8f0",
       borderRadius: 14, overflow: "hidden",
     }}>
       {/* Header */}
       <div style={{
         padding: "16px 18px",
-        background: "linear-gradient(135deg,rgba(124,58,237,.08),rgba(168,85,247,.04))",
-        borderBottom: "1px solid rgba(255,255,255,.05)",
+        background: "linear-gradient(135deg,rgba(37,99,235,.08),rgba(29,78,216,.04))",
+        borderBottom: "1px solid #e2e8f0",
         display: "flex", alignItems: "center", gap: 12,
       }}>
         <Avatar name={cita.cliente_nombre} size={44} />
         <div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", fontFamily: "'Syne', sans-serif", marginBottom: 4 }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: "#0f172a", fontFamily: "'Syne', sans-serif", marginBottom: 4 }}>
             {cita.cliente_nombre}
           </div>
           <StatusBadge fecha={cita.fecha} />
@@ -430,14 +441,14 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
           <div key={i} style={{
             display: "flex", justifyContent: "space-between", alignItems: "center",
             padding: "10px 18px",
-            borderBottom: i < rows.length - 1 ? "1px solid rgba(255,255,255,.03)" : "none",
+            borderBottom: i < rows.length - 1 ? "1px solid #f1f5f9" : "none",
           }}>
-            <span style={{ fontSize: 10, color: "#52525b", textTransform: "uppercase",
+            <span style={{ fontSize: 10, color: "#94a3b8", textTransform: "uppercase",
               letterSpacing: 1, fontFamily: "'Syne', sans-serif", fontWeight: 600 }}>
               {r.label}
             </span>
             <span style={{
-              fontSize: 12, color: "#d4d4d8",
+              fontSize: 12, color: "#334155",
               fontFamily: r.mono ? "'DM Mono', monospace" : "'Syne', sans-serif",
               fontWeight: r.mono ? 400 : 500,
             }}>
@@ -451,7 +462,7 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
 }
 
 // ── Próximas citas (mini widget) ──────────────────────────────────────────────
-function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[]; cp?: string; cs?: string }) {
+function ProximasCitas({ citas, cp = "#2563eb", cs = "#1d4ed8" }: { citas: Cita[]; cp?: string; cs?: string }) {
   const hoy = todayStr();
   const proximas = useMemo(
     () => citas.filter(c => c.fecha >= hoy).slice(0, 3),
@@ -464,7 +475,7 @@ function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[
     <div style={{ marginTop: 24 }}>
       <div style={{
         fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-        color: "#52525b", marginBottom: 12, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+        color: "#94a3b8", marginBottom: 12, fontFamily: "'Syne', sans-serif", fontWeight: 700,
       }}>
         Próximas
       </div>
@@ -473,11 +484,11 @@ function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[
           <div key={c.id} style={{
             display: "flex", alignItems: "center", gap: 10,
             padding: "8px 12px", borderRadius: 10,
-            background: "#0f0f0f", border: "1px solid rgba(255,255,255,.04)",
+            background: "#ffffff", border: "1px solid #e2e8f0",
           }}>
             <div style={{
               width: 32, height: 32, borderRadius: 8,
-              background: `${cp}1f`, border: `1px solid ${cp}33`,
+              background: `${cp}14`, border: `1px solid ${cp}33`,
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}>
@@ -489,12 +500,12 @@ function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[
               </span>
             </div>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#e4e4e7",
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#1e293b",
                 fontFamily: "'Syne', sans-serif",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {c.cliente_nombre}
               </div>
-              <div style={{ fontSize: 10, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+              <div style={{ fontSize: 10, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>
                 {c.hora} · {c.servicio}
               </div>
             </div>
@@ -507,12 +518,14 @@ function ProximasCitas({ citas, cp = "#7c3aed", cs = "#a855f7" }: { citas: Cita[
 
 // ── Componente principal ───────────────────────────────────────────────────────
 export default function DashboardClient({ negocio, citas, agendamientoUrl, cerrarSesion }: Props) {
-  const cp = negocio?.color_primario  || "#7c3aed";
-  const cs = negocio?.color_secundario || "#a855f7";
+  const cp = negocio?.color_primario  || "#2563eb";
+  const cs = negocio?.color_secundario || "#1d4ed8";
+  const [seccionActiva, setSeccionActiva] = useState<DashboardSeccion>("agenda");
   const [selectedDay,  setSelectedDay]  = useState<string | null>(null);
   const [selectedCita, setSelectedCita] = useState<Cita | null>(null);
   const [copied, setCopied]             = useState(false);
   const [search, setSearch]             = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
 
   const hoy = todayStr();
 
@@ -537,6 +550,9 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
   const citasFiltradas = useMemo(() => {
     let list = citas;
     if (selectedDay) list = list.filter(c => c.fecha === selectedDay);
+    if (filtroEstado) {
+      list = list.filter(c => (c.estado_cita || "pendiente") === filtroEstado);
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(c =>
@@ -546,7 +562,7 @@ export default function DashboardClient({ negocio, citas, agendamientoUrl, cerra
       );
     }
     return list;
-  }, [citas, selectedDay, search]);
+  }, [citas, selectedDay, search, filtroEstado]);
 
   function handleSelectDay(day: string | null) {
     setSelectedDay(day);
@@ -648,132 +664,175 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
   }
 }
 
+async function handleMarcarAtendida(cita: Cita, e: React.MouseEvent) {
+  e.stopPropagation();
+  const res = await fetch("/api/citas/atendida", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ citaId: cita.id }),
+  });
+  if (res.ok) window.location.reload();
+  else alert("Error al marcar la cita como atendida");
+}
+
+async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
+  e.stopPropagation();
+  const confirmar = window.confirm(
+    `¿Marcar como "no asistió" la cita de ${cita.cliente_nombre}?`
+  );
+  if (!confirmar) return;
+  const res = await fetch("/api/citas/no-asistio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ citaId: cita.id }),
+  });
+  if (res.ok) window.location.reload();
+  else alert("Error al actualizar la cita");
+}
+
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <>
+    <DashboardShell
+      negocioNombre={negocio?.nombre}
+      negocioTipo={negocio?.tipo}
+      plan={negocio?.plan}
+      activeSection={seccionActiva}
+      onSectionChange={setSeccionActiva}
+      cerrarSesion={cerrarSesion}
+    >
       <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS(cp, cs) }} />
-      <main style={{
-        minHeight: "100vh",
-        background: "#080808",
-        color: "#fff",
-        fontFamily: "'Syne', system-ui, sans-serif",
-      }}>
 
-        {/* Glow ambiental */}
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
-          <div style={{
-            position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
-            width: 900, height: 700,
-            background: `radial-gradient(ellipse,${cp}24 0%,transparent 70%)`,
-            borderRadius: "50%",
-          }} />
-          <div style={{
-            position: "absolute", bottom: "-20%", right: "-10%",
-            width: 500, height: 500,
-            background: `radial-gradient(ellipse,${cs}0f 0%,transparent 70%)`,
-            borderRadius: "50%",
-          }} />
+      {/* Glow ambiental */}
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0, overflow: "hidden" }}>
+        <div style={{
+          position: "absolute", top: "-30%", left: "50%", transform: "translateX(-50%)",
+          width: 900, height: 700,
+          background: `radial-gradient(ellipse,${cp}0d 0%,transparent 70%)`,
+          borderRadius: "50%",
+        }} />
+        <div style={{
+          position: "absolute", bottom: "-20%", right: "-10%",
+          width: 500, height: 500,
+          background: `radial-gradient(ellipse,${cs}08 0%,transparent 70%)`,
+          borderRadius: "50%",
+        }} />
+      </div>
+
+      {seccionActiva === "citas" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Citas
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Todas tus citas en formato de tabla
+            </p>
+          </div>
+          <CitasConfig citas={citas} negocioId={negocio?.id ?? ""} />
         </div>
-
-        {/* ── Nav ── */}
-        <nav style={{
-          position: "sticky", top: 0, zIndex: 100,
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 28px",
-          borderBottom: "1px solid rgba(255,255,255,.04)",
-          background: "rgba(8,8,8,.92)", backdropFilter: "blur(16px)",
-        }}>
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-  width: 28, height: 28, borderRadius: 8,
-  background: negocio?.logo_url
-    ? `url(${negocio.logo_url})`
-    : `linear-gradient(135deg, ${negocio?.color_primario || "#6d28d9"}, ${negocio?.color_secundario || "#a855f7"})`,
-  backgroundSize: "cover", backgroundPosition: "center",
-  display: "flex", alignItems: "center", justifyContent: "center",
-  fontSize: 14,
-}}>
-  {!negocio?.logo_url && "📅"}
-</div>
-            <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.3 }}>
-              <span style={{
-                background: `linear-gradient(135deg,${cp},${cs})`,
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              }}>Citas</span>Ya
-            </span>
-          </div>
-
-          {/* Centro: indicador de citas hoy */}
-          {citasHoy > 0 && (
-            <div style={{
-              display: "flex", alignItems: "center", gap: 6,
-              padding: "4px 12px", borderRadius: 99,
-              background: "rgba(74,222,128,.07)", border: "1px solid rgba(74,222,128,.2)",
-              fontSize: 11, color: "#4ade80", fontFamily: "'Syne', sans-serif", fontWeight: 600,
+      ) : seccionActiva === "servicios" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
             }}>
-              <span className="pulse" style={{
-                width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block",
-              }} />
-              {citasHoy} cita{citasHoy > 1 ? "s" : ""} hoy
-            </div>
-          )}
-
-          {/* Right */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {negocio?.tipo && (
-              <span style={{
-                fontSize: 10, color: cs,
-                background: `${cp}14`, border: `1px solid ${cp}2e`,
-                padding: "3px 10px", borderRadius: 99, fontWeight: 600, letterSpacing: .5,
-              }}>
-                {negocio.tipo}
-              </span>
-            )}
-            <span style={{
-              fontSize: 12, color: "#a1a1aa",
-              background: "#0f0f0f", border: "1px solid rgba(255,255,255,.05)",
-              padding: "5px 12px", borderRadius: 99,
-            }}>
-              {negocio?.nombre}
-            </span>
-            <form action={cerrarSesion}>
-              <button style={{
-                fontSize: 11, color: "#52525b", background: "none",
-                border: "none", cursor: "pointer", padding: "4px 8px",
-                fontFamily: "'Syne', sans-serif",
-              }}>
-                Salir
-              </button>
-            </form>
+              Servicios
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Define qué ofreces, cuánto dura y cuánto cuesta cada servicio
+            </p>
           </div>
-        </nav>
-
-        {/* ── Layout principal ── */}
+          <ServiciosConfig negocioId={negocio?.id ?? ""} />
+        </div>
+      ) : seccionActiva === "profesionales" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Profesionales
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Uno o varios profesionales, cada uno con su horario y sus servicios
+            </p>
+          </div>
+          <ProfesionalesConfig negocioId={negocio?.id ?? ""} />
+        </div>
+      ) : seccionActiva === "pacientes" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Pacientes
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Historial y datos de contacto de quienes agendan contigo
+            </p>
+          </div>
+          <PacientesConfig negocioId={negocio?.id ?? ""} citas={citas} />
+        </div>
+      ) : seccionActiva === "paquetes" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Paquetes
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Paquetes de sesiones para tus pacientes
+            </p>
+          </div>
+          <PaquetesConfig negocioId={negocio?.id ?? ""} negocioNombre={negocio?.nombre} />
+        </div>
+      ) : seccionActiva === "reportes" ? (
+        <div style={{ position: "relative", zIndex: 1, padding: "32px 36px" }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{
+              fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
+              fontFamily: "'Syne', sans-serif", marginBottom: 4,
+            }}>
+              Reportes
+            </h1>
+            <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
+              Un vistazo rápido a cómo va tu negocio
+            </p>
+          </div>
+          <ReportesConfig citas={citas} />
+        </div>
+      ) : (
         <div
           className="dashboard-grid"
           style={{
             position: "relative", zIndex: 1,
             display: "grid", gridTemplateColumns: "1fr 380px",
-            minHeight: "calc(100vh - 57px)",
+            minHeight: "100vh",
           }}
         >
           {/* ── Columna izquierda ── */}
           <div style={{
             padding: "32px 36px",
-            borderRight: "1px solid rgba(255,255,255,.04)",
+            borderRight: "1px solid #e2e8f0",
             overflowY: "auto",
           }}>
 
             {/* Header */}
             <div style={{ marginBottom: 28 }}>
               <h1 style={{
-                fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#fff",
+                fontSize: 26, fontWeight: 800, letterSpacing: -0.8, color: "#0f172a",
                 fontFamily: "'Syne', sans-serif", marginBottom: 4,
               }}>
                 Panel de citas
               </h1>
-              <p style={{ fontSize: 12, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+              <p style={{ fontSize: 12, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
                 {citas.length === 0 ? "Sin citas agendadas" : `${citas.length} citas en total`}
               </p>
             </div>
@@ -803,8 +862,8 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
 
             {/* Link agendamiento */}
             <div style={{
-              background: "#0a0a0a",
-              border: "1px solid rgba(255,255,255,.05)",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
               borderRadius: 14, padding: "14px 18px", marginBottom: 28,
               display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
             }}>
@@ -817,7 +876,7 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
                   🔗 Link de agendamiento
                 </div>
                 <div style={{
-                  fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#71717a",
+                  fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#64748b",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {agendamientoUrl}
@@ -829,9 +888,9 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
                 style={{
                   flexShrink: 0, fontSize: 11, padding: "7px 16px", borderRadius: 10,
                   cursor: "pointer",
-                  background: copied ? "rgba(74,222,128,.08)" : `${cp}14`,
-                  color: copied ? "#4ade80" : cs,
-                  border: `1px solid ${copied ? "rgba(74,222,128,.25)" : `${cp}40`}`,
+                  background: copied ? "rgba(22,163,74,.08)" : `${cp}14`,
+                  color: copied ? "#16a34a" : cs,
+                  border: `1px solid ${copied ? "rgba(22,163,74,.25)" : `${cp}40`}`,
                   fontFamily: "'Syne', sans-serif", fontWeight: 600,
                 }}
               >
@@ -858,20 +917,20 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
 
 {/* Toggle de pago */}
 <div style={{
-  background: "#0a0a0a",
-  border: "1px solid rgba(255,255,255,.05)",
+  background: "#f8fafc",
+  border: "1px solid #e2e8f0",
   borderRadius: 14, padding: "14px 18px", marginBottom: 28,
   display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
 }}>
   <div>
     <div style={{
       fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-      color: negocio?.requiere_pago ? cp : "#52525b",
+      color: negocio?.requiere_pago ? cp : "#94a3b8",
       marginBottom: 6, fontFamily: "'Syne', sans-serif", fontWeight: 700,
     }}>
       💳 Pago al agendar
     </div>
-    <div style={{ fontSize: 11, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+    <div style={{ fontSize: 11, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
       {negocio?.requiere_pago
         ? "Tus clientes pagan antes de confirmar la cita"
         : "Tus clientes agendan sin pagar anticipado"}
@@ -885,8 +944,8 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
       width: 44, height: 24, borderRadius: 99,
       background: negocio?.requiere_pago
         ? `${cp}99`
-        : "rgba(255,255,255,.08)",
-      border: `1px solid ${negocio?.requiere_pago ? cp : "rgba(255,255,255,.1)"}`,
+        : "#e2e8f0",
+      border: `1px solid ${negocio?.requiere_pago ? cp : "#cbd5e1"}`,
       cursor: "pointer",
       position: "relative",
       transition: "all .2s",
@@ -904,28 +963,47 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
   </button>
 </div>
 
-            {/* Buscador */}
-            <div style={{ position: "relative", marginBottom: 20 }}>
-              <span style={{
-                position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-                fontSize: 13, color: "#3f3f46", pointerEvents: "none",
-              }}>
-                🔍
-              </span>
-              <input
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar por nombre, teléfono o servicio..."
+            {/* Buscador + filtro de estado */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <div style={{ position: "relative", flex: 1 }}>
+                <span style={{
+                  position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
+                  fontSize: 13, color: "#94a3b8", pointerEvents: "none",
+                }}>
+                  🔍
+                </span>
+                <input
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Buscar por nombre, teléfono o servicio..."
+                  style={{
+                    width: "100%", padding: "10px 14px 10px 36px",
+                    background: "#f8fafc", border: "1px solid #e2e8f0",
+                    borderRadius: 10, color: "#1e293b", fontSize: 12, outline: "none",
+                    fontFamily: "'DM Mono', monospace",
+                    transition: "border-color .2s",
+                  }}
+                  onFocus={e => { e.currentTarget.style.borderColor = `${cp}66`; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = "#e2e8f0"; }}
+                />
+              </div>
+              <select
+                value={filtroEstado}
+                onChange={e => setFiltroEstado(e.target.value)}
                 style={{
-                  width: "100%", padding: "10px 14px 10px 36px",
-                  background: "#0a0a0a", border: "1px solid rgba(255,255,255,.06)",
-                  borderRadius: 10, color: "#e4e4e7", fontSize: 12, outline: "none",
-                  fontFamily: "'DM Mono', monospace",
-                  transition: "border-color .2s",
+                  padding: "10px 12px",
+                  background: "#f8fafc", border: "1px solid #e2e8f0",
+                  borderRadius: 10, color: "#1e293b", fontSize: 12, outline: "none",
+                  fontFamily: "'DM Mono', monospace", flexShrink: 0,
                 }}
-                onFocus={e => { e.currentTarget.style.borderColor = `${cp}66`; }}
-                onBlur={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,.06)"; }}
-              />
+              >
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="confirmada">Confirmada</option>
+                <option value="atendida">Atendida</option>
+                <option value="no_asistio">No asistió</option>
+                <option value="cancelada">Cancelada</option>
+              </select>
             </div>
 
             {/* Cabecera lista */}
@@ -935,14 +1013,14 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
             }}>
               <div style={{
                 fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-                color: "#52525b", fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                color: "#94a3b8", fontFamily: "'Syne', sans-serif", fontWeight: 700,
               }}>
                 {selectedDay ? `Citas del ${formatFechaCorta(selectedDay)}` : "Todas las citas"}
                 {` (${citasFiltradas.length})`}
               </div>
-              {(selectedDay || search) && (
+              {(selectedDay || search || filtroEstado) && (
                 <button
-                  onClick={() => { handleSelectDay(null); setSearch(""); }}
+                  onClick={() => { handleSelectDay(null); setSearch(""); setFiltroEstado(""); }}
                   style={{
                     fontSize: 10, color: cp, background: "none",
                     border: "none", cursor: "pointer",
@@ -958,13 +1036,13 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
             {citasFiltradas.length === 0 ? (
               <div style={{
                 textAlign: "center", padding: "56px 20px",
-                background: "rgba(255,255,255,.01)",
-                border: "1px dashed rgba(255,255,255,.06)", borderRadius: 16,
+                background: "#f8fafc",
+                border: "1px dashed #cbd5e1", borderRadius: 16,
               }}>
                 <div style={{ fontSize: 36, marginBottom: 12 }}>
                   {search ? "🔍" : "📭"}
                 </div>
-                <p style={{ color: "#52525b", fontSize: 13, fontFamily: "'Syne', sans-serif" }}>
+                <p style={{ color: "#64748b", fontSize: 13, fontFamily: "'Syne', sans-serif" }}>
                   {search ? "Sin resultados para tu búsqueda" :
                     selectedDay ? "Sin citas este día" : "Aún no hay citas agendadas"}
                 </p>
@@ -980,8 +1058,8 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
                       className="cita-row fade-in"
                       onClick={() => handleSelectCita(c)}
                       style={{
-                        background: isSel ? `${cp}12` : "#0d0d0d",
-                        border: `1px solid ${isSel ? `${cp}66` : "rgba(255,255,255,.05)"}`,
+                        background: isSel ? `${cp}0d` : "#ffffff",
+                        border: `1px solid ${isSel ? `${cp}66` : "#e2e8f0"}`,
                         borderRadius: 14, padding: "14px 18px",
                         display: "flex", alignItems: "center", justifyContent: "space-between",
                         cursor: "pointer",
@@ -991,11 +1069,11 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <Avatar name={c.cliente_nombre} />
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: "#fff",
+                          <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a",
                             fontFamily: "'Syne', sans-serif", marginBottom: 3 }}>
                             {c.cliente_nombre}
                           </div>
-                          <div style={{ fontSize: 11, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+                          <div style={{ fontSize: 11, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>
                             {c.cliente_telefono}
                           </div>
                         </div>
@@ -1007,7 +1085,7 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
                         }}>
                           {c.servicio}
                         </span>
-                        <span style={{ fontSize: 10, color: "#52525b", fontFamily: "'DM Mono', monospace" }}>
+                        <span style={{ fontSize: 10, color: "#94a3b8", fontFamily: "'DM Mono', monospace" }}>
                           {formatFechaCorta(c.fecha)} · {c.hora}
                         </span>
                         <StatusBadge fecha={c.fecha} />
@@ -1015,23 +1093,71 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
   {c.estado_cita === "cancelada" && (
     <span style={{
       fontSize: 10, padding: "3px 10px", borderRadius: 99,
-      background: "rgba(113,113,122,.08)", color: "#71717a",
-      border: "1px solid rgba(113,113,122,.2)",
+      background: "#f1f5f9", color: "#64748b",
+      border: "1px solid #e2e8f0",
       fontFamily: "'Syne', sans-serif", fontWeight: 600,
     }}>
       Cancelada
     </span>
   )}
 
-  {c.estado_cita === "confirmada" && (
+  {c.estado_cita === "atendida" && (
     <span style={{
       fontSize: 10, padding: "3px 10px", borderRadius: 99,
-      background: "rgba(74,222,128,.08)", color: "#4ade80",
-      border: "1px solid rgba(74,222,128,.2)",
+      background: "rgba(37,99,235,.08)", color: "#2563eb",
+      border: "1px solid rgba(37,99,235,.2)",
       fontFamily: "'Syne', sans-serif", fontWeight: 600,
     }}>
-      ✓ Confirmada
+      ✓ Atendida
     </span>
+  )}
+
+  {c.estado_cita === "no_asistio" && (
+    <span style={{
+      fontSize: 10, padding: "3px 10px", borderRadius: 99,
+      background: "rgba(217,119,6,.1)", color: "#d97706",
+      border: "1px solid rgba(217,119,6,.25)",
+      fontFamily: "'Syne', sans-serif", fontWeight: 600,
+    }}>
+      No asistió
+    </span>
+  )}
+
+  {c.estado_cita === "confirmada" && (
+    <>
+      <span style={{
+        fontSize: 10, padding: "3px 10px", borderRadius: 99,
+        background: "rgba(22,163,74,.08)", color: "#16a34a",
+        border: "1px solid rgba(22,163,74,.2)",
+        fontFamily: "'Syne', sans-serif", fontWeight: 600,
+      }}>
+        ✓ Confirmada
+      </span>
+      <button
+        onClick={(e) => handleMarcarAtendida(c, e)}
+        style={{
+          fontSize: 10, padding: "3px 10px", borderRadius: 99,
+          background: "rgba(37,99,235,.08)", color: "#2563eb",
+          border: "1px solid rgba(37,99,235,.2)",
+          cursor: "pointer",
+          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+        }}
+      >
+        Atendida
+      </button>
+      <button
+        onClick={(e) => handleMarcarNoAsistio(c, e)}
+        style={{
+          fontSize: 10, padding: "3px 10px", borderRadius: 99,
+          background: "rgba(217,119,6,.1)", color: "#d97706",
+          border: "1px solid rgba(217,119,6,.25)",
+          cursor: "pointer",
+          fontFamily: "'Syne', sans-serif", fontWeight: 600,
+        }}
+      >
+        No asistió
+      </button>
+    </>
   )}
 
   {(!c.estado_cita || c.estado_cita === "pendiente") && (
@@ -1040,8 +1166,8 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
         onClick={(e) => handleConfirmar(c, e)}
         style={{
           fontSize: 10, padding: "3px 10px", borderRadius: 99,
-          background: "rgba(74,222,128,.08)", color: "#4ade80",
-          border: "1px solid rgba(74,222,128,.2)",
+          background: "rgba(22,163,74,.08)", color: "#16a34a",
+          border: "1px solid rgba(22,163,74,.2)",
           cursor: "pointer",
           fontFamily: "'Syne', sans-serif", fontWeight: 600,
         }}
@@ -1052,8 +1178,8 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
         onClick={(e) => handleCancelar(c, e)}
         style={{
           fontSize: 10, padding: "3px 10px", borderRadius: 99,
-          background: "rgba(239,68,68,.08)", color: "#f87171",
-          border: "1px solid rgba(239,68,68,.2)",
+          background: "rgba(220,38,38,.08)", color: "#dc2626",
+          border: "1px solid rgba(220,38,38,.2)",
           cursor: "pointer",
           fontFamily: "'Syne', sans-serif", fontWeight: 600,
         }}
@@ -1088,12 +1214,12 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
   bloquearPasado={false}
 />
 
-            <div style={{ height: 1, background: "rgba(255,255,255,.04)", margin: "22px 0" }} />
+            <div style={{ height: 1, background: "#e2e8f0", margin: "22px 0" }} />
 
             {/* Detalle */}
             <div style={{
               fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
-              color: "#52525b", marginBottom: 12,
+              color: "#94a3b8", marginBottom: 12,
               fontFamily: "'Syne', sans-serif", fontWeight: 700,
             }}>
               Detalle
@@ -1107,7 +1233,7 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
             <ProximasCitas citas={citas} cp={cp} cs={cs} />
           </div>
         </div>
-      </main>
-    </>
+      )}
+    </DashboardShell>
   );
 }

@@ -1,28 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireOwnNegocio } from "@/lib/auth-negocio";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseAdmin = createSupabaseAdmin();
-
     const { negocioId, horarios, duracionCita } = await req.json();
 
-    if (!negocioId || !horarios) {
+    const auth = await requireOwnNegocio(negocioId);
+    if (auth.error) return auth.error;
+
+    if (!horarios) {
       return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     }
 
@@ -32,6 +19,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const supabaseAdmin = createSupabaseAdmin();
 
     // Actualiza duración de cita en el negocio
     if (duracionCita) {
@@ -87,14 +76,12 @@ export async function POST(req: NextRequest) {
 
 export async function GET(req: NextRequest) {
   try {
-    const supabaseAdmin = createSupabaseAdmin();
-
     const negocioId = req.nextUrl.searchParams.get("negocioId");
 
-    if (!negocioId) {
-      return NextResponse.json({ error: "Falta negocioId" }, { status: 400 });
-    }
+    const auth = await requireOwnNegocio(negocioId);
+    if (auth.error) return auth.error;
 
+    const supabaseAdmin = createSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("horarios_disponibilidad")
       .select("*")

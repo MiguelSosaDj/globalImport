@@ -26,7 +26,7 @@ export default async function AgendarPage({
   );
 
   const { data: negocio, error } = await supabase
-    .from("negocios")
+    .from("negocios_publico")
     .select("*")
     .eq("id", negocioId)
     .single();
@@ -36,5 +36,36 @@ export default async function AgendarPage({
     notFound();
   }
 
-  return <AgendarForm negocio={negocio} />;
+  const { data: servicios } = await supabase
+    .from("servicios")
+    .select(
+      "id, nombre, descripcion, categoria, duracion_min, precio, anticipo_tipo, anticipo_valor, imagen_url"
+    )
+    .eq("negocio_id", negocioId)
+    .eq("activo", true)
+    .eq("permite_reserva_publica", true)
+    .order("created_at", { ascending: true });
+
+  const { data: profesionales } = await supabase
+    .from("profesionales")
+    .select("id, nombre, apellidos, especialidad, color")
+    .eq("negocio_id", negocioId)
+    .eq("activo", true)
+    .order("created_at", { ascending: true });
+
+  const { data: paquetes } = await supabase
+    .from("paquetes")
+    .select("id, nombre, numero_sesiones, precio, vigencia_dias, servicios(nombre)")
+    .eq("negocio_id", negocioId)
+    .eq("activo", true)
+    .order("created_at", { ascending: true });
+
+  return (
+    <AgendarForm
+      negocio={negocio}
+      serviciosDb={servicios || []}
+      profesionalesDb={profesionales || []}
+      paquetesDb={paquetes || []}
+    />
+  );
 }

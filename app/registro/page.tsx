@@ -5,6 +5,33 @@ import { useRouter } from "next/navigation";
 import { getSupabase } from "@/lib/supabase";
 import Link from "next/link";
 
+// Plantilla inicial de servicios por tipo de negocio: se crea al registrarse
+// como punto de partida editable en el dashboard (Servicios). Son precios de
+// ejemplo en COP, no precios reales — el dueño los ajusta de inmediato.
+const SERVICIOS_SEED_POR_TIPO: Record<
+  string,
+  { nombre: string; duracion_min: number; precio: number }[]
+> = {
+  barberia: [
+    { nombre: "Corte de cabello", duracion_min: 30, precio: 25000 },
+    { nombre: "Barba", duracion_min: 20, precio: 15000 },
+    { nombre: "Corte + barba", duracion_min: 45, precio: 35000 },
+  ],
+  medico: [
+    { nombre: "Consulta general", duracion_min: 30, precio: 80000 },
+    { nombre: "Control", duracion_min: 20, precio: 60000 },
+  ],
+  mecanico: [
+    { nombre: "Cambio de aceite", duracion_min: 45, precio: 70000 },
+    { nombre: "Diagnostico", duracion_min: 30, precio: 50000 },
+  ],
+  fisioterapia: [
+    { nombre: "Sesión de fisioterapia", duracion_min: 45, precio: 60000 },
+    { nombre: "Masaje terapéutico", duracion_min: 45, precio: 55000 },
+    { nombre: "Evaluación inicial", duracion_min: 30, precio: 50000 },
+  ],
+};
+
 export default function RegistroPage() {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -36,72 +63,86 @@ export default function RegistroPage() {
       return;
     }
 
-    const { error: negocioError } = await supabase.from("negocios").insert({
-      nombre: form.nombre,
-      tipo: form.tipo,
-      user_id: data.user.id,
-    });
+    const { data: negocio, error: negocioError } = await supabase
+      .from("negocios")
+      .insert({
+        nombre: form.nombre,
+        tipo: form.tipo,
+        user_id: data.user.id,
+      })
+      .select("id")
+      .single();
 
-    if (negocioError) {
+    if (negocioError || !negocio) {
       setErrorMsg("Cuenta creada pero error al guardar el negocio");
       setEstado("error");
       return;
+    }
+
+    const seed = SERVICIOS_SEED_POR_TIPO[form.tipo];
+    if (seed) {
+      await supabase.from("servicios").insert(
+        seed.map((s) => ({
+          negocio_id: negocio.id,
+          nombre: s.nombre,
+          duracion_min: s.duracion_min,
+          precio: s.precio,
+        }))
+      );
+      // No bloqueamos el registro si esto falla (p.ej. la migración de
+      // servicios aún no se ha aplicado) — el negocio ya quedó creado.
     }
 
     router.push("/dashboard");
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] flex items-center justify-center px-4">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[-20%] left-[50%] translate-x-[-50%] w-[600px] h-[500px] bg-violet-600/10 rounded-full blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 bg-white/[0.03] border border-white/10 rounded-2xl p-8 w-full max-w-md">
+    <main className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="relative z-10 bg-white border border-slate-200 shadow-sm rounded-2xl p-8 w-full max-w-md">
         <div className="mb-6">
-          <Link href="/" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Link href="/" className="text-xs text-slate-500 hover:text-slate-700 transition-colors">
             Volver al inicio
           </Link>
-          <h1 className="text-2xl font-bold text-white mt-3">Crear cuenta</h1>
-          <p className="text-sm text-zinc-500 mt-1">Registra tu negocio en CitasYa</p>
+          <h1 className="text-2xl font-bold text-slate-900 mt-3">Crear cuenta</h1>
+          <p className="text-sm text-slate-500 mt-1">Registra tu negocio en CitasYa</p>
         </div>
 
         {estado === "error" && (
-          <div className="mb-6 bg-red-500/10 text-red-400 text-sm px-4 py-3 rounded-xl border border-red-500/20">
+          <div className="mb-6 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-200">
             {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <label className="text-sm font-medium text-zinc-400">Nombre del negocio</label>
+            <label className="text-sm font-medium text-slate-600">Nombre del negocio</label>
             <input
               name="nombre"
               value={form.nombre}
               onChange={handleChange}
               required
               placeholder="Barberia El Corte"
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-zinc-400">Tipo de negocio</label>
+            <label className="text-sm font-medium text-slate-600">Tipo de negocio</label>
             <select
               name="tipo"
               value={form.tipo}
               onChange={handleChange}
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors"
             >
-              <option value="barberia" className="bg-zinc-900">Barberia</option>
-              <option value="medico" className="bg-zinc-900">Medico</option>
-              <option value="mecanico" className="bg-zinc-900">Mecanico</option>
-              <option value="masajista" className="bg-zinc-900">Masajista</option>
+              <option value="barberia">Barberia</option>
+              <option value="medico">Medico</option>
+              <option value="mecanico">Mecanico</option>
+              <option value="fisioterapia">Fisioterapia y bienestar</option>
             </select>
           </div>
 
           <div>
-            <label className="text-sm font-medium text-zinc-400">Email</label>
+            <label className="text-sm font-medium text-slate-600">Email</label>
             <input
               name="email"
               type="email"
@@ -109,12 +150,12 @@ export default function RegistroPage() {
               onChange={handleChange}
               required
               placeholder="negocio@email.com"
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-zinc-400">Contrasena</label>
+            <label className="text-sm font-medium text-slate-600">Contrasena</label>
             <input
               name="password"
               type="password"
@@ -122,21 +163,21 @@ export default function RegistroPage() {
               onChange={handleChange}
               required
               placeholder="Minimo 6 caracteres"
-              className="mt-1.5 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-violet-500 transition-colors"
+              className="mt-1.5 w-full rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <button
             type="submit"
             disabled={estado === "cargando"}
-            className="mt-1 w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
+            className="mt-1 w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-3 rounded-xl transition-colors"
           >
             {estado === "cargando" ? "Creando cuenta..." : "Crear cuenta"}
           </button>
 
-          <p className="text-center text-sm text-zinc-500">
+          <p className="text-center text-sm text-slate-500">
             Ya tienes cuenta?{" "}
-            <Link href="/login" className="text-violet-400 hover:text-violet-300 transition-colors">
+            <Link href="/login" className="text-blue-600 hover:text-blue-700 transition-colors">
               Inicia sesion
             </Link>
           </p>

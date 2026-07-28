@@ -1,33 +1,9 @@
 import Stripe from "stripe";
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createStripe } from "@/lib/stripe";
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
-
-function createStripe() {
-  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-
-  if (!stripeSecretKey) {
-    throw new Error("Falta STRIPE_SECRET_KEY");
-  }
-
-  return new Stripe(stripeSecretKey);
-}
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
 
 export async function POST(req: NextRequest) {
   console.log("WEBHOOK RECIBIDO");
@@ -65,18 +41,51 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── Pago de cita individual ──────────────────────────────────────────────
+    // ── Idempotencia ──────────────────────────────────────────────────────────
+    // Stripe puede reenviar el mismo evento (reintentos por timeout, etc).
+    // Insertamos el event.id antes de procesar; si ya existe (conflicto de
+    // primary key), es un reintento y no se vuelve a aplicar el efecto.
+    const { error: dedupeError } = await supabaseAdmin
+      .from("stripe_webhook_events")
+      .insert({ event_id: event.id, event_type: event.type });
+
+    if (dedupeError) {
+      if (dedupeError.code === "23505") {
+        console.log("Evento duplicado, ya procesado:", event.id);
+        return NextResponse.json({ received: true, duplicate: true });
+      }
+
+      console.error("Error registrando evento de webhook:", dedupeError);
+      // Si la tabla de idempotencia falla por un motivo distinto a duplicado
+      // (p.ej. la migración 0001 no se ha aplicado todavía), seguimos
+      // procesando para no romper pagos reales — se corrige apenas se aplique
+      // la migración.
+    }
+
+    // ── Pago de cita individual (o de todas las sesiones de un paquete) ─────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const citaId = session.metadata?.citaId;
+      // Si el cliente compró un paquete de varias sesiones, citaIds trae
+      // todas las citas creadas para ese paquete (separadas por coma) — el
+      // pago fue uno solo, pero hay que confirmar todas las sesiones.
+      const citaIds = session.metadata?.citaIds
+        ? session.metadata.citaIds.split(",").filter(Boolean)
+        : citaId
+        ? [citaId]
+        : [];
 
       console.log("Checkout completado");
-      console.log("Cita ID:", citaId);
+      console.log("Cita IDs:", citaIds);
       console.log("Session ID:", session.id);
 
-      // Solo actualizar cita si el checkout tenía citaId en metadata
+      // Solo actualizar citas si el checkout tenía citaId(s) en metadata.
       // Los checkouts de suscripción no lo tendrán.
-      if (citaId) {
+      if (citaIds.length > 0) {
+        // stripe_session_id es único en la tabla — solo la primera cita del
+        // grupo lo guarda, el resto solo se marca pagada/confirmada.
+        const [primeraCitaId, ...restoCitaIds] = citaIds;
+
         const { error } = await supabaseAdmin
           .from("citas")
           .update({
@@ -84,7 +93,7 @@ export async function POST(req: NextRequest) {
             estado_cita: "confirmada",
             stripe_session_id: session.id,
           })
-          .eq("id", citaId);
+          .eq("id", primeraCitaId);
 
         if (error) {
           console.error("Error actualizando cita:", error);
@@ -95,7 +104,21 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        console.log("Cita actualizada como pagada");
+        if (restoCitaIds.length > 0) {
+          const { error: errorResto } = await supabaseAdmin
+            .from("citas")
+            .update({
+              estado_pago: "pagado",
+              estado_cita: "confirmada",
+            })
+            .in("id", restoCitaIds);
+
+          if (errorResto) {
+            console.error("Error actualizando el resto de las sesiones:", errorResto);
+          }
+        }
+
+        console.log(`${citaIds.length} cita(s) actualizada(s) como pagada(s)`);
       }
     }
 
@@ -168,7 +191,6 @@ export async function POST(req: NextRequest) {
     console.error("Error general en /api/stripe-webhook:", error);
 
     return NextResponse.json(
-      
       { error: error.message || "Error interno del servidor" },
       { status: 500 }
     );

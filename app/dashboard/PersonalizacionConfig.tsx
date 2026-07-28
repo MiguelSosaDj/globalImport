@@ -11,8 +11,8 @@ interface Props {
 export default function PersonalizacionConfig({
   negocioId,
   logoActual,
-  colorPrimarioActual = "#7c3aed",
-  colorSecundarioActual = "#a855f7",
+  colorPrimarioActual = "#2563eb",
+  colorSecundarioActual = "#1d4ed8",
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [logoPreview, setLogoPreview] = useState(logoActual || "");
@@ -66,8 +66,8 @@ export default function PersonalizacionConfig({
 
   return (
     <div style={{
-      background: "#0a0a0a",
-      border: "1px solid rgba(255,255,255,.05)",
+      background: "#f8fafc",
+      border: "1px solid #e2e8f0",
       borderRadius: 14, marginBottom: 28, overflow: "hidden",
     }}>
       <button
@@ -85,7 +85,7 @@ export default function PersonalizacionConfig({
         }}>
           🎨 Personalización de marca
         </div>
-        <span style={{ color: "#52525b", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
+        <span style={{ color: "#94a3b8", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
       </button>
 
       {abierto && (
@@ -94,7 +94,7 @@ export default function PersonalizacionConfig({
           {/* Logo */}
           <div>
             <label style={{
-              fontSize: 11, color: "#71717a", fontFamily: "'Syne', sans-serif",
+              fontSize: 11, color: "#64748b", fontFamily: "'Syne', sans-serif",
               fontWeight: 600, display: "block", marginBottom: 8,
             }}>
               Logo del negocio
@@ -140,7 +140,7 @@ export default function PersonalizacionConfig({
           <div style={{ display: "flex", gap: 16 }}>
             <div style={{ flex: 1 }}>
               <label style={{
-                fontSize: 11, color: "#71717a", fontFamily: "'Syne', sans-serif",
+                fontSize: 11, color: "#64748b", fontFamily: "'Syne', sans-serif",
                 fontWeight: 600, display: "block", marginBottom: 8,
               }}>
                 Color primario
@@ -166,7 +166,7 @@ export default function PersonalizacionConfig({
 
             <div style={{ flex: 1 }}>
               <label style={{
-                fontSize: 11, color: "#71717a", fontFamily: "'Syne', sans-serif",
+                fontSize: 11, color: "#64748b", fontFamily: "'Syne', sans-serif",
                 fontWeight: 600, display: "block", marginBottom: 8,
               }}>
                 Color secundario
@@ -208,9 +208,9 @@ export default function PersonalizacionConfig({
             style={{
               padding: "10px", borderRadius: 10, border: "none", cursor: "pointer",
               background: guardado
-                ? "rgba(74,222,128,.15)"
+                ? "rgba(22,163,74,.15)"
                 : `linear-gradient(135deg, ${colorPrimario}, ${colorSecundario})`,
-              color: guardado ? "#4ade80" : "#fff",
+              color: guardado ? "#16a34a" : "#fff",
               fontSize: 12, fontWeight: 600, fontFamily: "'Syne', sans-serif",
             }}
           >

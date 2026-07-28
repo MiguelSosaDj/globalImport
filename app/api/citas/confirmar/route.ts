@@ -1,31 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-function createSupabaseAdmin() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-
-  if (!serviceRoleKey) {
-    throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey);
-}
+import { createSupabaseAdmin } from "@/lib/supabase-admin";
+import { requireOwnCita } from "@/lib/auth-negocio";
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseAdmin = createSupabaseAdmin();
-
     const { citaId } = await req.json();
 
-    if (!citaId) {
-      return NextResponse.json({ error: "Falta citaId" }, { status: 400 });
-    }
+    const auth = await requireOwnCita(citaId);
+    if (auth.error) return auth.error;
 
+    const supabaseAdmin = createSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("citas")
       .update({ estado_cita: "confirmada" })
