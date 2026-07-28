@@ -121,8 +121,25 @@ const GLOBAL_CSS = (cp: string, cs: string) => `
   @media (max-width: 768px) {
     .dashboard-grid { grid-template-columns: 1fr !important; }
     .stats-grid { grid-template-columns: 1fr 1fr !important; }
-    .sidebar { display: none !important; }
+    .dashboard-grid .seccion-padding { border-right: none !important; }
+    .sidebar {
+      padding: 20px 16px !important;
+      border-top: 1px solid #e2e8f0;
+    }
     .seccion-padding { padding: 20px 16px !important; }
+
+    .cita-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+    }
+    .cita-row > div:last-child {
+      align-items: flex-start !important;
+      width: 100%;
+    }
+    .cita-row > div:last-child > div:last-child {
+      flex-wrap: wrap !important;
+    }
   }
 `;
 

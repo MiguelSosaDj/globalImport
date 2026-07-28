@@ -127,16 +127,30 @@ export default function DashboardShell({
       {/* ── Contenido ── */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Topbar móvil (sidebar se oculta en pantallas chicas) */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-          <span className="text-sm font-semibold text-slate-900">CitasYa</span>
-          <div className="flex items-center gap-3">
+        <div className="md:hidden border-b border-slate-200 bg-white">
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-sm font-semibold text-slate-900">CitasYa</span>
+            <form action={cerrarSesion}>
+              <button className="text-xs text-slate-400 hover:text-slate-700 transition-colors">
+                Cerrar sesión
+              </button>
+            </form>
+          </div>
+          <div
+            className="flex items-center gap-1.5 px-3 pb-2.5 overflow-x-auto"
+            style={{
+              WebkitOverflowScrolling: "touch",
+              maskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to right, black calc(100% - 28px), transparent 100%)",
+            }}
+          >
             {NAV_ITEMS.filter((i) => i.disponible).map((item) => (
               <button
                 key={item.id}
                 onClick={() => onSectionChange(item.id as DashboardSeccion)}
-                className={`text-xs px-2 py-1 rounded-lg ${
+                className={`flex-shrink-0 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg transition-colors ${
                   item.id === activeSection
-                    ? "bg-blue-50 text-blue-700"
+                    ? "bg-blue-50 text-blue-700 font-medium"
                     : "text-slate-500"
                 }`}
               >

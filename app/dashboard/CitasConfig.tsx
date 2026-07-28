@@ -28,10 +28,13 @@ function MarcarPago({
   montoSugerido?: number;
 }) {
   const [editando, setEditando] = useState(false);
-  const [monto, setMonto] = useState(
-    montoActual ? String(montoActual) : montoSugerido ? String(montoSugerido) : ""
-  );
+  const [monto, setMonto] = useState("");
   const [guardando, setGuardando] = useState(false);
+
+  function abrirEdicion() {
+    setMonto(montoActual ? String(montoActual) : montoSugerido ? String(montoSugerido) : "");
+    setEditando(true);
+  }
 
   async function confirmar() {
     const montoNum = Number(monto);
@@ -52,7 +55,7 @@ function MarcarPago({
 
   if (!editando) {
     return (
-      <Button variant="secondary" size="sm" onClick={() => setEditando(true)}>
+      <Button variant="secondary" size="sm" onClick={abrirEdicion}>
         ¿Pagó?
       </Button>
     );
