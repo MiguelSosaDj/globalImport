@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { Button } from "@/app/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
+import { toast } from "@/app/components/ui/Toast";
+import { confirmDialog } from "@/app/components/ui/ConfirmDialog";
 
 interface Solicitud {
   id: string;
@@ -14,6 +16,19 @@ interface Solicitud {
   plan: string;
   periodo: string;
   estado: "pendiente" | "aprobada" | "rechazada";
+  created_at: string;
+}
+
+interface Negocio {
+  id: string;
+  nombre: string;
+  tipo: string;
+  plan: string;
+  subscription_status: string;
+  subscription_end: string | null;
+  citas_simultaneas: number;
+  limite_citas_mes: number | null;
+  correo: string | null;
   created_at: string;
 }
 
@@ -60,7 +75,7 @@ function TogglePago() {
     });
     setGuardando(false);
     if (res.ok) setMetodo(nuevo);
-    else alert("Error al cambiar el método de pago");
+    else toast.error("Error al cambiar el método de pago");
   }
 
   if (metodo === null) return <p className="text-sm text-slate-400">Cargando...</p>;
@@ -97,12 +112,15 @@ function FilaSolicitud({ s, onProcesada }: { s: Solicitud; onProcesada: () => vo
       const { url } = await res.json();
       window.open(url, "_blank");
     } else {
-      alert("Error al abrir el comprobante");
+      toast.error("Error al abrir el comprobante");
     }
   }
 
   async function aprobar() {
-    if (!confirm(`¿Aprobar la suscripción de ${s.nombre} (${s.negocio_nombre})?`)) return;
+    const ok = await confirmDialog(
+      `¿Aprobar la suscripción de ${s.nombre} (${s.negocio_nombre})?`
+    );
+    if (!ok) return;
     setProcesando(true);
     const res = await fetch(`/api/admin/solicitudes/${s.id}/aprobar`, { method: "POST" });
     setProcesando(false);
@@ -111,17 +129,18 @@ function FilaSolicitud({ s, onProcesada }: { s: Solicitud; onProcesada: () => vo
       abrirWhatsAppCuentaCreada(data.nombre, data.telefono, data.correo, data.password);
       onProcesada();
     } else {
-      alert(data.error || "Error al aprobar");
+      toast.error(data.error || "Error al aprobar");
     }
   }
 
   async function rechazar() {
-    if (!confirm(`¿Rechazar la solicitud de ${s.nombre}?`)) return;
+    const ok = await confirmDialog(`¿Rechazar la solicitud de ${s.nombre}?`, { peligroso: true });
+    if (!ok) return;
     setProcesando(true);
     const res = await fetch(`/api/admin/solicitudes/${s.id}/rechazar`, { method: "POST" });
     setProcesando(false);
     if (res.ok) onProcesada();
-    else alert("Error al rechazar");
+    else toast.error("Error al rechazar");
   }
 
   return (
@@ -164,9 +183,88 @@ function FilaSolicitud({ s, onProcesada }: { s: Solicitud; onProcesada: () => vo
   );
 }
 
+function FilaNegocio({ n }: { n: Negocio }) {
+  const [citasSimultaneas, setCitasSimultaneas] = useState(String(n.citas_simultaneas));
+  const [limiteCitasMes, setLimiteCitasMes] = useState(
+    n.limite_citas_mes === null ? "" : String(n.limite_citas_mes)
+  );
+  const [guardando, setGuardando] = useState(false);
+  const [guardado, setGuardado] = useState(false);
+
+  async function guardar() {
+    setGuardando(true);
+    setGuardado(false);
+    const res = await fetch(`/api/admin/negocios/${n.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        citasSimultaneas: Number(citasSimultaneas),
+        limiteCitasMes: limiteCitasMes === "" ? null : Number(limiteCitasMes),
+      }),
+    });
+    setGuardando(false);
+    if (res.ok) {
+      setGuardado(true);
+      setTimeout(() => setGuardado(false), 2000);
+    } else {
+      const data = await res.json();
+      toast.error(data.error || "Error al guardar");
+    }
+  }
+
+  return (
+    <tr className="border-b border-slate-50 last:border-0">
+      <td className="px-4 py-3">
+        <div className="text-slate-900 font-medium">{n.nombre}</div>
+        <div className="text-xs text-slate-400 capitalize">{n.tipo}</div>
+      </td>
+      <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{n.correo || "—"}</td>
+      <td className="px-4 py-3 text-slate-600 capitalize">{n.plan}</td>
+      <td className="px-4 py-3">
+        {n.subscription_status === "activo" ? (
+          <Badge tone="success">Activo</Badge>
+        ) : (
+          <Badge tone="danger">Inactivo</Badge>
+        )}
+        {n.subscription_end && (
+          <div className="text-[11px] text-slate-400 mt-1 whitespace-nowrap">
+            vence {formatFecha(n.subscription_end)}
+          </div>
+        )}
+      </td>
+      <td className="px-4 py-3">
+        <input
+          type="number"
+          min={1}
+          value={citasSimultaneas}
+          onChange={(e) => setCitasSimultaneas(e.target.value)}
+          className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-sm text-center focus:outline-none focus:border-blue-500"
+        />
+      </td>
+      <td className="px-4 py-3">
+        <input
+          type="number"
+          min={0}
+          placeholder={`plan: ${n.plan}`}
+          value={limiteCitasMes}
+          onChange={(e) => setLimiteCitasMes(e.target.value)}
+          className="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm text-center placeholder:text-slate-300 focus:outline-none focus:border-blue-500"
+        />
+      </td>
+      <td className="px-4 py-3 text-right whitespace-nowrap">
+        <Button size="sm" variant="secondary" onClick={guardar} disabled={guardando}>
+          {guardando ? "..." : guardado ? "✓ Guardado" : "Guardar"}
+        </Button>
+      </td>
+    </tr>
+  );
+}
+
 export default function AdminPanel({ cerrarSesion }: { cerrarSesion: () => void | Promise<void> }) {
   const [solicitudes, setSolicitudes] = useState<Solicitud[]>([]);
   const [cargando, setCargando] = useState(true);
+  const [negocios, setNegocios] = useState<Negocio[]>([]);
+  const [cargandoNegocios, setCargandoNegocios] = useState(true);
 
   async function cargar() {
     setCargando(true);
@@ -175,8 +273,16 @@ export default function AdminPanel({ cerrarSesion }: { cerrarSesion: () => void 
     setCargando(false);
   }
 
+  async function cargarNegocios() {
+    setCargandoNegocios(true);
+    const res = await fetch("/api/admin/negocios");
+    if (res.ok) setNegocios((await res.json()).negocios || []);
+    setCargandoNegocios(false);
+  }
+
   useEffect(() => {
     cargar();
+    cargarNegocios();
   }, []);
 
   const pendientes = solicitudes.filter((s) => s.estado === "pendiente");
@@ -225,7 +331,7 @@ export default function AdminPanel({ cerrarSesion }: { cerrarSesion: () => void 
             </p>
           </CardHeader>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[760px] text-sm">
               <thead>
                 <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
                   <th className="px-4 py-3 font-semibold">Fecha</th>
@@ -253,6 +359,51 @@ export default function AdminPanel({ cerrarSesion }: { cerrarSesion: () => void 
                   solicitudes.map((s) => (
                     <FilaSolicitud key={s.id} s={s} onProcesada={cargar} />
                   ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        <Card className="overflow-hidden">
+          <CardHeader>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Negocios registrados {negocios.length > 0 && `(${negocios.length})`}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Cupos simultáneos: cuántas citas puede tener un negocio a la misma hora antes de
+              que ese horario se marque como lleno. Límite/mes: opcional, si lo dejas vacío usa
+              el default de su plan.
+            </p>
+          </CardHeader>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
+                  <th className="px-4 py-3 font-semibold">Negocio</th>
+                  <th className="px-4 py-3 font-semibold">Correo</th>
+                  <th className="px-4 py-3 font-semibold">Plan</th>
+                  <th className="px-4 py-3 font-semibold">Suscripción</th>
+                  <th className="px-4 py-3 font-semibold">Cupos/hora</th>
+                  <th className="px-4 py-3 font-semibold">Límite/mes</th>
+                  <th className="px-4 py-3 font-semibold text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cargandoNegocios ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : negocios.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-10 text-center text-slate-400">
+                      Sin negocios todavía
+                    </td>
+                  </tr>
+                ) : (
+                  negocios.map((n) => <FilaNegocio key={n.id} n={n} />)
                 )}
               </tbody>
             </table>

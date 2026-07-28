@@ -1,10 +1,33 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+
+function CancelarPendiente() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const citaId = searchParams.get("cita_id");
+    if (!citaId) return;
+    // Libera el horario y el cupo mensual de la cita pendiente que quedó
+    // creada antes de que Stripe redirigiera aquí (pago abandonado).
+    fetch("/api/citas/cancelar-pendiente", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ citaId }),
+    }).catch(() => {});
+  }, [searchParams]);
+
+  return null;
+}
 
 export default function CancelPage() {
   return (
     <main className="min-h-screen bg-white flex items-center justify-center px-4">
+      <Suspense fallback={null}>
+        <CancelarPendiente />
+      </Suspense>
       <div className="relative z-10 bg-white border border-slate-200 shadow-sm rounded-2xl p-8 w-full max-w-md text-center">
         <div className="mb-6">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">

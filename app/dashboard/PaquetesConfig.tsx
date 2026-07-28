@@ -4,6 +4,7 @@ import { Button } from "@/app/components/ui/Button";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Input, Label, Select } from "@/app/components/ui/Input";
+import { toast } from "@/app/components/ui/Toast";
 
 interface Servicio {
   id: string;
@@ -93,7 +94,7 @@ function VenderPaquete({
       setPacienteId("");
       setTimeout(() => setOk(false), 2000);
     } else {
-      alert("Error al asignar el paquete");
+      toast.error("Error al asignar el paquete");
     }
   }
 

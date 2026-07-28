@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { IconReloj } from "@/app/components/ui/Icons";
+import { toast } from "@/app/components/ui/Toast";
 
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const DURACIONES = [15, 30, 45, 60, 90];
@@ -71,7 +72,7 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
       setGuardado(true);
       setTimeout(() => setGuardado(false), 2500);
     } else {
-      alert("Error al guardar los horarios");
+      toast.error("Error al guardar los horarios");
     }
   }
 

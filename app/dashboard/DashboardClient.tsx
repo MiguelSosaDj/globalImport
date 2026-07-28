@@ -21,6 +21,8 @@ import {
   IconBandeja,
   IconSeleccionar,
 } from "@/app/components/ui/Icons";
+import { toast } from "@/app/components/ui/Toast";
+import { confirmDialog } from "@/app/components/ui/ConfirmDialog";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 interface Negocio {
   id: string;
@@ -640,14 +642,15 @@ async function handleTogglePago(e: React.MouseEvent) {
     }),
   });
   if (res.ok) window.location.reload();
-  else alert("Error al actualizar la configuración");
+  else toast.error("Error al actualizar la configuración");
 }
 
 async function handleCancelar(cita: Cita, e: React.MouseEvent) {
   e.stopPropagation(); // evita que seleccione la cita al hacer click
 
-  const confirmar = window.confirm(
-    `¿Cancelar la cita de ${cita.cliente_nombre} el ${formatFecha(cita.fecha)}?`
+  const confirmar = await confirmDialog(
+    `¿Cancelar la cita de ${cita.cliente_nombre} el ${formatFecha(cita.fecha)}?`,
+    { peligroso: true }
   );
   if (!confirmar) return;
 
@@ -661,7 +664,7 @@ async function handleCancelar(cita: Cita, e: React.MouseEvent) {
     abrirWhatsApp(cita); // abre WhatsApp con el mensaje listo
     window.location.reload(); // recarga el dashboard para reflejar el cambio
   } else {
-    alert("Error al cancelar la cita");
+    toast.error("Error al cancelar la cita");
   }
 }
 
@@ -693,7 +696,7 @@ async function handleConfirmar(cita: Cita, e: React.MouseEvent) {
     window.open(`https://wa.me/${numeroCompleto}?text=${mensaje}`, "_blank");
     window.location.reload();
   } else {
-    alert("Error al confirmar la cita");
+    toast.error("Error al confirmar la cita");
   }
 }
 
@@ -705,13 +708,14 @@ async function handleMarcarAtendida(cita: Cita, e: React.MouseEvent) {
     body: JSON.stringify({ citaId: cita.id }),
   });
   if (res.ok) window.location.reload();
-  else alert("Error al marcar la cita como atendida");
+  else toast.error("Error al marcar la cita como atendida");
 }
 
 async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
   e.stopPropagation();
-  const confirmar = window.confirm(
-    `¿Marcar como "no asistió" la cita de ${cita.cliente_nombre}?`
+  const confirmar = await confirmDialog(
+    `¿Marcar como "no asistió" la cita de ${cita.cliente_nombre}?`,
+    { peligroso: true }
   );
   if (!confirmar) return;
   const res = await fetch("/api/citas/no-asistio", {
@@ -720,7 +724,7 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
     body: JSON.stringify({ citaId: cita.id }),
   });
   if (res.ok) window.location.reload();
-  else alert("Error al actualizar la cita");
+  else toast.error("Error al actualizar la cita");
 }
 
   // ── Render ──────────────────────────────────────────────────────────────────

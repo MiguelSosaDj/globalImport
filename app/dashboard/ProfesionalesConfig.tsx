@@ -4,6 +4,7 @@ import { Button } from "@/app/components/ui/Button";
 import { Card, CardBody } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Input, Label } from "@/app/components/ui/Input";
+import { toast } from "@/app/components/ui/Toast";
 
 interface Profesional {
   id: string;
@@ -109,7 +110,7 @@ function ProfesionalDetalle({
       setGuardado(true);
       setTimeout(() => setGuardado(false), 2000);
     } else {
-      alert("Error al guardar");
+      toast.error("Error al guardar");
     }
   }
 

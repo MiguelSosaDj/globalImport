@@ -161,6 +161,23 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (citaError?.code === "CY001") {
+        return NextResponse.json(
+          { error: "Ese horario ya no tiene cupos disponibles. Elige otro." },
+          { status: 409 }
+        );
+      }
+
+      if (citaError?.code === "CY002") {
+        return NextResponse.json(
+          {
+            error:
+              "Este negocio alcanzó su límite de citas para este mes. Contacta directamente al negocio.",
+          },
+          { status: 409 }
+        );
+      }
+
       console.error("Error creando cita(s) pendiente(s):", citaError);
 
       return NextResponse.json(

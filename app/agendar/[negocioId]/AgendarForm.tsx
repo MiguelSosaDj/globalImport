@@ -5,6 +5,7 @@ import Link from "next/link";
 import SlotPicker from "./SlotPicker";
 import CalendarioMensual from "@/app/components/CalendarioMensual";
 import { IconPaquetes, IconAgenda } from "@/app/components/ui/Icons";
+import { toast } from "@/app/components/ui/Toast";
 
 
 const SERVICIOS_POR_TIPO: Record<string, string[]> = {
@@ -132,8 +133,7 @@ export default function AgendarForm({
     profesional_id: "",
     paquete_id: "",
   });
-  const [estado, setEstado] = useState<"idle" | "cargando" | "pago" | "ok" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [estado, setEstado] = useState<"idle" | "cargando" | "pago" | "ok">("idle");
   const [ultimoTelefono, setUltimoTelefono] = useState("");
   const [ultimasSesiones, setUltimasSesiones] = useState(1);
   const [diasActivos, setDiasActivos] = useState<number[]>([]);
@@ -198,8 +198,13 @@ const diasInfo = useMemo(() => {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!form.fecha || !form.hora) {
+      toast.warning("Selecciona una fecha y una hora disponible antes de confirmar.");
+      return;
+    }
+
     setEstado("cargando");
-    setErrorMsg("");
 
     try {
       if (negocio.requiere_pago) {
@@ -218,7 +223,15 @@ const diasInfo = useMemo(() => {
           }),
         });
 
-        if (!res.ok) throw new Error("Error al crear sesion de pago");
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          if (res.status === 409) {
+            toast.warning(data?.error || "Ese horario ya no está disponible. Elige otro.");
+            setEstado("idle");
+            return;
+          }
+          throw new Error(data?.error || "Error al crear sesión de pago");
+        }
         const { url } = await res.json();
         if (url) window.location.href = url;
 
@@ -247,15 +260,32 @@ const diasInfo = useMemo(() => {
 
         if (error) {
           if (error.code === "23505") {
-            throw new Error(
+            toast.warning(
               fechas.length > 1
                 ? "Uno de los días de tus sesiones ya está reservado. Elige otra fecha de inicio."
                 : "Ese horario ya fue reservado. Elige otro."
             );
+            setEstado("idle");
+            return;
+          }
+          if (error.code === "CY001") {
+            toast.warning("Ese horario ya no tiene cupos disponibles. Elige otro.");
+            setEstado("idle");
+            return;
+          }
+          if (error.code === "CY002") {
+            toast.warning(
+              "Este negocio alcanzó su límite de citas para este mes. Contacta directamente al negocio."
+            );
+            setEstado("idle");
+            return;
           }
           throw new Error(error.message);
         }
 
+        toast.success(
+          fechas.length > 1 ? `${fechas.length} sesiones agendadas correctamente` : "Cita agendada correctamente"
+        );
         setUltimoTelefono(form.cliente_telefono);
         setUltimasSesiones(fechas.length);
         setEstado("ok");
@@ -270,13 +300,13 @@ const diasInfo = useMemo(() => {
         });
       }
     } catch (error: any) {
-      setErrorMsg(error.message || "Error al procesar");
-      setEstado("error");
+      toast.error(error.message || "Error al procesar");
+      setEstado("idle");
     }
   }
 
   return (
-    <main className="min-h-screen bg-white flex items-center justify-center px-4">
+    <main className="min-h-screen bg-white flex items-center justify-center px-4 py-6">
       <div
   className="fixed inset-0 pointer-events-none"
   style={{
@@ -284,22 +314,19 @@ const diasInfo = useMemo(() => {
   }}
 />
 
-<div className="relative z-10 bg-white border border-slate-200 shadow-sm rounded-2xl p-8 w-full max-w-lg">
+<div className="relative z-10 bg-white border border-slate-200 shadow-xl rounded-2xl p-5 sm:p-7 w-full max-w-4xl max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="mb-6">
-  <Link href="/" className="text-xs text-slate-500 hover:text-slate-700 transition-colors">
-    CitasYa
-  </Link>
-  <div className="flex items-center gap-3 mt-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
+  <div className="flex items-center gap-3 min-w-0">
     {negocio.logo_url ? (
       <img
         src={negocio.logo_url}
         alt={negocio.nombre}
-        className="w-12 h-12 rounded-xl object-cover border border-slate-200"
+        className="w-11 h-11 rounded-xl object-cover border border-slate-200 flex-shrink-0"
       />
     ) : (
       <div
-        className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+        className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
         style={{
           background: `linear-gradient(135deg, ${negocio.color_primario || "#2563eb"}, ${negocio.color_secundario || "#1d4ed8"})`,
         }}
@@ -307,11 +334,14 @@ const diasInfo = useMemo(() => {
         🏢
       </div>
     )}
-    <div>
-      <h1 className="text-2xl font-bold text-slate-900">Agendar cita</h1>
-      <p className="text-sm text-slate-500">{negocio.nombre}</p>
+    <div className="min-w-0">
+      <h1 className="text-xl font-bold text-slate-900 truncate">Agendar cita</h1>
+      <p className="text-sm text-slate-500 truncate">{negocio.nombre}</p>
     </div>
   </div>
+  <Link href="/" className="text-xs text-slate-400 hover:text-slate-700 transition-colors flex-shrink-0">
+    CitasYa
+  </Link>
 </div>
 
         {/* Mensaje éxito */}
@@ -337,16 +367,11 @@ const diasInfo = useMemo(() => {
           </div>
         )}
 
-        {/* Mensaje error */}
-        {estado === "error" && (
-          <div className="mb-6 bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl border border-red-200">
-            {errorMsg || "Algo salio mal. Intenta de nuevo."}
-          </div>
-        )}
-
         {/* Formulario — se oculta cuando queda ok */}
         {estado !== "ok" && (
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* ── Columna izquierda: datos del cliente + servicio ── */}
+          <div className="flex flex-col gap-3.5">
             <div>
               <label className="text-sm font-medium text-slate-600">Nombre</label>
               <input
@@ -532,8 +557,10 @@ const diasInfo = useMemo(() => {
                 </select>
               </div>
             )}
+          </div>
 
-           <div className="flex flex-col gap-3">
+          {/* ── Columna derecha: fecha + hora + resumen + confirmar ── */}
+          <div className="flex flex-col gap-3">
   <div>
     <label className="text-sm font-medium text-slate-600">
       {paqueteSeleccionado ? "Selecciona la fecha de tu primera sesión" : "Selecciona fecha"}
@@ -590,7 +617,6 @@ const diasInfo = useMemo(() => {
       </p>
     </div>
   )}
-</div>
 
             {/* Resumen de pago — solo si requiere_pago */}
             {negocio.requiere_pago && (
@@ -631,6 +657,7 @@ const diasInfo = useMemo(() => {
     "Confirmar cita"
   )}
 </button>
+          </div>
           </form>
         )}
 

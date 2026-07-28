@@ -4,6 +4,7 @@ import { Card } from "@/app/components/ui/Card";
 import { Badge } from "@/app/components/ui/Badge";
 import { Button } from "@/app/components/ui/Button";
 import { Input, Select } from "@/app/components/ui/Input";
+import { toast } from "@/app/components/ui/Toast";
 
 interface CitaTabla {
   id: string;
@@ -49,7 +50,7 @@ function MarcarPago({
     if (res.ok) {
       window.location.reload();
     } else {
-      alert("Error al registrar el pago");
+      toast.error("Error al registrar el pago");
     }
   }
 
@@ -62,17 +63,17 @@ function MarcarPago({
   }
 
   return (
-    <div className="flex items-center gap-1.5 justify-end">
+    <div className="flex items-center gap-1.5 justify-end flex-shrink-0">
       <Input
         type="number"
         min={0}
         value={monto}
         onChange={(e) => setMonto(e.target.value)}
         placeholder="Monto COP"
-        className="w-28 text-right"
+        className="w-24 sm:w-28 flex-shrink-0 !px-2 text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
         autoFocus
       />
-      <Button size="sm" onClick={confirmar} disabled={guardando}>
+      <Button size="sm" onClick={confirmar} disabled={guardando} className="flex-shrink-0">
         {guardando ? "..." : "✓"}
       </Button>
     </div>
@@ -192,7 +193,7 @@ export default function CitasConfig({
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
                 <th className="px-4 py-3 font-semibold">Fecha</th>

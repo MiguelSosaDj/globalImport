@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { IconPaleta } from "@/app/components/ui/Icons";
+import { toast } from "@/app/components/ui/Toast";
 
 interface Props {
   negocioId: string;
@@ -44,7 +45,7 @@ export default function PersonalizacionConfig({
       const { logoUrl } = await res.json();
       setLogoPreview(logoUrl);
     } else {
-      alert("Error al subir el logo");
+      toast.error("Error al subir el logo");
     }
   }
 
@@ -61,7 +62,7 @@ export default function PersonalizacionConfig({
       setGuardado(true);
       setTimeout(() => setGuardado(false), 2500);
     } else {
-      alert("Error al guardar los colores");
+      toast.error("Error al guardar los colores");
     }
   }
 
