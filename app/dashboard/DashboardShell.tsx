@@ -55,12 +55,12 @@ export default function DashboardShell({
     <div className="min-h-screen flex bg-white">
       {/* ── Sidebar ── */}
       <aside
-        className={`flex-shrink-0 bg-slate-900 text-slate-300 flex flex-col transition-all duration-200 ${
+        className={`flex-shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 flex flex-col transition-all duration-200 shadow-xl ${
           colapsado ? "w-[72px]" : "w-64"
         } hidden md:flex`}
       >
         <div className="flex items-center gap-2 px-4 py-5 border-b border-white/5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-sm flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm shadow-blue-500/30 flex items-center justify-center text-sm flex-shrink-0">
             📅
           </div>
           {!colapsado && (
@@ -87,12 +87,12 @@ export default function DashboardShell({
                 disabled={!isFuncional}
                 onClick={() => isFuncional && onSectionChange(item.id as DashboardSeccion)}
                 title={!isFuncional ? "Próximamente" : undefined}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors text-left ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 text-left border-l-2 ${
                   isActive
-                    ? "bg-slate-800 text-white font-medium"
+                    ? "bg-gradient-to-r from-blue-600/20 to-transparent border-blue-500 text-white font-medium"
                     : isFuncional
-                    ? "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-                    : "text-slate-600 cursor-not-allowed"
+                    ? "border-transparent text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                    : "border-transparent text-slate-600 cursor-not-allowed"
                 }`}
               >
                 <span className="text-base flex-shrink-0">{item.icon}</span>

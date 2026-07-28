@@ -1,5 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+const TIPOS_NEGOCIO = ["barberia", "medico", "mecanico", "fisioterapia", "masajista"];
+const NEQUI_NUMERO = "3013423627";
 
 const PLANES = [
   {
@@ -185,21 +189,216 @@ function ModalCheckout({ plan, priceId, onClose }: ModalCheckoutProps) {
   );
 }
 
+interface ModalNequiProps {
+  plan: { nombre: string; precio: number };
+  periodo: "mensual" | "anual";
+  onClose: () => void;
+}
+
+function ModalNequi({ plan, periodo, onClose }: ModalNequiProps) {
+  const router = useRouter();
+  const [form, setForm] = useState({
+    nombre: "",
+    correo: "",
+    telefono: "",
+    negocioNombre: "",
+    tipoNegocio: TIPOS_NEGOCIO[0],
+  });
+  const [comprobante, setComprobante] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  }
+
+  async function handleSubmit() {
+    if (!form.nombre.trim() || !form.correo.trim() || !form.telefono.trim() || !form.negocioNombre.trim()) {
+      setError("Todos los campos son requeridos");
+      return;
+    }
+    if (!comprobante) {
+      setError("Debes adjuntar el comprobante de pago");
+      return;
+    }
+
+    setEnviando(true);
+    setError("");
+
+    try {
+      const body = new FormData();
+      body.append("nombre", form.nombre);
+      body.append("correo", form.correo);
+      body.append("telefono", form.telefono);
+      body.append("negocioNombre", form.negocioNombre);
+      body.append("tipoNegocio", form.tipoNegocio);
+      body.append("plan", plan.nombre);
+      body.append("periodo", periodo);
+      body.append("comprobante", comprobante);
+
+      const res = await fetch("/api/suscripciones/solicitar", {
+        method: "POST",
+        body,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error al enviar la solicitud");
+
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8 overflow-y-auto"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-2xl p-8 flex flex-col gap-5 shadow-xl my-auto">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors text-xl leading-none"
+        >
+          ×
+        </button>
+
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium tracking-widest uppercase text-blue-600">
+            Plan {plan.nombre}
+          </p>
+          <h3 className="text-xl font-bold text-slate-900">Paga por Nequi</h3>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-slate-700">
+          <p>
+            Envía <strong>{formatCOP(plan.precio)}</strong> al Nequi{" "}
+            <strong className="text-blue-700">{NEQUI_NUMERO}</strong> y adjunta tu comprobante
+            abajo. Aprobamos tu cuenta manualmente en cuanto lo verifiquemos.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-slate-500">Tu nombre</label>
+            <input
+              name="nombre"
+              value={form.nombre}
+              onChange={handleChange}
+              placeholder="Juan Pérez"
+              className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Correo</label>
+            <input
+              name="correo"
+              type="email"
+              value={form.correo}
+              onChange={handleChange}
+              placeholder="tu@email.com"
+              className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Teléfono (WhatsApp)</label>
+            <input
+              name="telefono"
+              value={form.telefono}
+              onChange={handleChange}
+              placeholder="3001234567"
+              className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-slate-500">Nombre del negocio</label>
+              <input
+                name="negocioNombre"
+                value={form.negocioNombre}
+                onChange={handleChange}
+                placeholder="Mi negocio"
+                className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-500">Tipo de negocio</label>
+              <select
+                name="tipoNegocio"
+                value={form.tipoNegocio}
+                onChange={handleChange}
+                className="mt-1 w-full bg-white border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-blue-500 transition-colors capitalize"
+              >
+                {TIPOS_NEGOCIO.map((t) => (
+                  <option key={t} value={t} className="capitalize">
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-slate-500">Comprobante de pago (imagen)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setComprobante(e.target.files?.[0] || null)}
+              className="mt-1 w-full text-sm text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 file:text-sm"
+            />
+          </div>
+        </div>
+
+        {error && <p className="text-xs text-red-600">{error}</p>}
+
+        <button
+          onClick={handleSubmit}
+          disabled={enviando}
+          className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {enviando ? "Enviando..." : "Enviar solicitud"}
+        </button>
+
+        <p className="text-center text-xs text-slate-400">
+          Revisaremos tu comprobante y activaremos tu cuenta manualmente.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function PlanesSection() {
   const [anual, setAnual] = useState(false);
+  const [metodoPago, setMetodoPago] = useState<"stripe" | "nequi">("stripe");
   const [modalData, setModalData] = useState<{
     planNombre: string;
     precio: number;
     priceId: string;
   } | null>(null);
 
+  useEffect(() => {
+    fetch("/api/config/metodo-pago")
+      .then((r) => r.json())
+      .then((d) => setMetodoPago(d.metodoPago || "stripe"))
+      .catch(() => setMetodoPago("stripe"));
+  }, []);
+
   function abrirModal(planNombre: string, precio: number, priceId: string) {
     setModalData({ planNombre, precio, priceId });
   }
 
   return (
-    <section className="max-w-5xl mx-auto px-8 pb-24">
-      {modalData && (
+    <section className="max-w-5xl mx-auto px-5 sm:px-8 pb-16 sm:pb-24">
+      {modalData && metodoPago === "nequi" && (
+        <ModalNequi
+          plan={{ nombre: modalData.planNombre, precio: modalData.precio }}
+          periodo={anual ? "anual" : "mensual"}
+          onClose={() => setModalData(null)}
+        />
+      )}
+      {modalData && metodoPago === "stripe" && (
         <ModalCheckout
           plan={{ nombre: modalData.planNombre, precio: modalData.precio }}
           priceId={modalData.priceId}
@@ -208,7 +407,7 @@ export default function PlanesSection() {
       )}
 
       <div className="flex flex-col items-center text-center gap-4 mb-10">
-        <h2 className="text-4xl font-bold tracking-tight text-slate-900">
+        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
           Planes y <span className="text-blue-600">precios</span>
         </h2>
         <p className="text-slate-600 max-w-md">

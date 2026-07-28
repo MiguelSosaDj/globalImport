@@ -109,7 +109,11 @@ export default function CitasConfig({
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("");
   const [precioPorServicio, setPrecioPorServicio] = useState<Record<string, number>>({});
-  const [precioPorPaquete, setPrecioPorPaquete] = useState<Record<string, number>>({});
+  // Por paquete se guarda el precio YA DIVIDIDO entre el número de sesiones
+  // — el cliente paga el paquete completo una sola vez, pero cada sesión
+  // individual (y por lo tanto cada pago manual que registres aquí) vale
+  // precio_paquete / numero_sesiones, nunca el precio del paquete completo.
+  const [montoPorSesionPaquete, setMontoPorSesionPaquete] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!negocioId) return;
@@ -127,15 +131,19 @@ export default function CitasConfig({
       if (resPaq.ok) {
         const { paquetes } = await resPaq.json();
         const map: Record<string, number> = {};
-        for (const p of paquetes || []) map[p.id] = p.precio;
-        setPrecioPorPaquete(map);
+        for (const p of paquetes || []) {
+          map[p.id] = Math.round(p.precio / (p.numero_sesiones || 1));
+        }
+        setMontoPorSesionPaquete(map);
       }
     }
     cargarPrecios();
   }, [negocioId]);
 
   function montoSugeridoPara(c: CitaTabla) {
-    if (c.paquete_id && precioPorPaquete[c.paquete_id]) return precioPorPaquete[c.paquete_id];
+    if (c.paquete_id && montoPorSesionPaquete[c.paquete_id]) {
+      return montoPorSesionPaquete[c.paquete_id];
+    }
     return precioPorServicio[c.servicio];
   }
 

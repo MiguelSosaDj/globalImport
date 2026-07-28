@@ -9,11 +9,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<Variant, string> = {
-  primary: "bg-blue-600 hover:bg-blue-700 text-white border border-transparent",
+  primary:
+    "bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border border-blue-700/10 shadow-sm shadow-blue-600/20 hover:shadow-md hover:shadow-blue-600/30",
   secondary:
-    "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300",
+    "bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 shadow-sm",
   ghost: "bg-transparent hover:bg-slate-100 text-slate-600 border border-transparent",
-  danger: "bg-red-600 hover:bg-red-700 text-white border border-transparent",
+  danger:
+    "bg-gradient-to-b from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border border-red-700/10 shadow-sm shadow-red-600/20",
 };
 
 const SIZE_CLASSES: Record<Size, string> = {
@@ -26,7 +28,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        className={`font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
+        className={`font-medium transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 ${VARIANT_CLASSES[variant]} ${SIZE_CLASSES[size]} ${className}`}
         {...props}
       />
     );

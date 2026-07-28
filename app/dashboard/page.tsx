@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
+import AdminPanel from "./AdminPanel";
+import { ADMIN_EMAIL } from "@/lib/auth-admin";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -20,6 +22,30 @@ export default async function DashboardPage() {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  async function cerrarSesionAdmin() {
+    "use server";
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() { return cookieStore.getAll(); },
+          setAll() {},
+        },
+      }
+    );
+    await supabase.auth.signOut();
+    redirect("/login");
+  }
+
+  // El correo administrador de la plataforma ve un panel distinto al de un
+  // negocio normal — administra métodos de pago y solicitudes de
+  // suscripción, no tiene agenda propia.
+  if (user.email === ADMIN_EMAIL) {
+    return <AdminPanel cerrarSesion={cerrarSesionAdmin} />;
+  }
 
   const { data: negocio } = await supabase
     .from("negocios")
