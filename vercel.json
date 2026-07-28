@@ -3,11 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/recordatorios",
-      "schedule": "36 21 * * *"
-    },
-    {
-      "path": "/api/cron/recordatorios",
-      "schedule": "36 16 * * *"
+      "schedule": "43 21 * * *"
     }
   ]
 }
