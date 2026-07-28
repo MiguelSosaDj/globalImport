@@ -28,8 +28,9 @@ export async function GET(req: NextRequest) {
       .select("id, cliente_nombre, cliente_correo, servicio, fecha, hora, negocio_id, negocios(nombre)")
       .eq("estado_cita", "confirmada")
       .eq("fecha", mananaStr)
-      .eq("recordatorio_email_enviado", false)
-      .not("cliente_correo", "is", null);
+.or(
+  "recordatorio_email_enviado.eq.false,recordatorio_email_enviado.is.null"
+)      .not("cliente_correo", "is", null);
 
     if (error) {
       console.error("Error consultando citas para recordatorio:", error);
