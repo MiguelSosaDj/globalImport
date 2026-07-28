@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { IconReloj } from "@/app/components/ui/Icons";
 
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const DURACIONES = [15, 30, 45, 60, 90];
@@ -91,8 +92,9 @@ export default function HorariosConfig({ negocioId, duracionActual }: {
         <div style={{
           fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
           color: "#2563eb", fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 5,
         }}>
-          🕐 Horarios de disponibilidad
+          <IconReloj size={11} /> Horarios de disponibilidad
         </div>
         <span style={{ color: "#94a3b8", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
       </button>

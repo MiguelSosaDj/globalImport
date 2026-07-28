@@ -1,5 +1,17 @@
 "use client";
 import { useState } from "react";
+import {
+  IconAgenda,
+  IconCitas,
+  IconPacientes,
+  IconProfesional,
+  IconServicios,
+  IconPagos,
+  IconPaquetes,
+  IconReportes,
+  IconMensajes,
+  IconConfiguracion,
+} from "@/app/components/ui/Icons";
 
 export type DashboardSeccion =
   | "agenda"
@@ -13,21 +25,21 @@ export type DashboardSeccion =
 interface NavItem {
   id: DashboardSeccion | string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   disponible: boolean;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: "agenda", label: "Agenda", icon: "📅", disponible: true },
-  { id: "citas", label: "Citas", icon: "🗓️", disponible: true },
-  { id: "pacientes", label: "Pacientes", icon: "🧑‍🤝‍🧑", disponible: true },
-  { id: "profesionales", label: "Profesionales", icon: "👤", disponible: true },
-  { id: "servicios", label: "Servicios", icon: "🧾", disponible: true },
-  { id: "pagos", label: "Pagos", icon: "💳", disponible: false },
-  { id: "paquetes", label: "Paquetes", icon: "📦", disponible: true },
-  { id: "reportes", label: "Reportes", icon: "📊", disponible: true },
-  { id: "mensajes", label: "Mensajes", icon: "💬", disponible: false },
-  { id: "configuracion", label: "Configuración", icon: "⚙️", disponible: false },
+  { id: "agenda", label: "Agenda", icon: IconAgenda, disponible: true },
+  { id: "citas", label: "Citas", icon: IconCitas, disponible: true },
+  { id: "pacientes", label: "Pacientes", icon: IconPacientes, disponible: true },
+  { id: "profesionales", label: "Profesionales", icon: IconProfesional, disponible: true },
+  { id: "servicios", label: "Servicios", icon: IconServicios, disponible: true },
+  { id: "pagos", label: "Pagos", icon: IconPagos, disponible: false },
+  { id: "paquetes", label: "Paquetes", icon: IconPaquetes, disponible: true },
+  { id: "reportes", label: "Reportes", icon: IconReportes, disponible: true },
+  { id: "mensajes", label: "Mensajes", icon: IconMensajes, disponible: false },
+  { id: "configuracion", label: "Configuración", icon: IconConfiguracion, disponible: false },
 ];
 
 interface Props {
@@ -52,16 +64,16 @@ export default function DashboardShell({
   const [colapsado, setColapsado] = useState(false);
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="h-screen flex bg-white overflow-hidden">
       {/* ── Sidebar ── */}
       <aside
-        className={`flex-shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 flex flex-col transition-all duration-200 shadow-xl ${
+        className={`flex-shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 flex flex-col transition-all duration-200 shadow-xl h-full ${
           colapsado ? "w-[72px]" : "w-64"
         } hidden md:flex`}
       >
         <div className="flex items-center gap-2 px-4 py-5 border-b border-white/5">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm shadow-blue-500/30 flex items-center justify-center text-sm flex-shrink-0">
-            📅
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 shadow-sm shadow-blue-500/30 flex items-center justify-center text-white flex-shrink-0">
+            <IconAgenda size={16} />
           </div>
           {!colapsado && (
             <span className="text-base font-semibold text-white tracking-tight">
@@ -95,7 +107,7 @@ export default function DashboardShell({
                     : "border-transparent text-slate-600 cursor-not-allowed"
                 }`}
               >
-                <span className="text-base flex-shrink-0">{item.icon}</span>
+                <item.icon size={17} className="flex-shrink-0" />
                 {!colapsado && <span className="truncate">{item.label}</span>}
                 {!colapsado && !isFuncional && (
                   <span className="ml-auto text-[10px] text-slate-600 border border-slate-700 rounded-full px-1.5 py-0.5">
@@ -125,7 +137,7 @@ export default function DashboardShell({
       </aside>
 
       {/* ── Contenido ── */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {/* Topbar móvil (sidebar se oculta en pantallas chicas) */}
         <div className="md:hidden border-b border-slate-200 bg-white">
           <div className="flex items-center justify-between px-4 py-3">
@@ -148,19 +160,20 @@ export default function DashboardShell({
               <button
                 key={item.id}
                 onClick={() => onSectionChange(item.id as DashboardSeccion)}
-                className={`flex-shrink-0 whitespace-nowrap text-xs px-3 py-1.5 rounded-lg transition-colors ${
+                className={`flex-shrink-0 whitespace-nowrap flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-colors ${
                   item.id === activeSection
                     ? "bg-blue-50 text-blue-700 font-medium"
                     : "text-slate-500"
                 }`}
               >
-                {item.icon} {item.label}
+                <item.icon size={14} />
+                {item.label}
               </button>
             ))}
           </div>
         </div>
 
-        <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
+        <main className="flex-1 min-w-0 min-h-0 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

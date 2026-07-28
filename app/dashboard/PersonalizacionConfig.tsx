@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import { IconPaleta } from "@/app/components/ui/Icons";
 
 interface Props {
   negocioId: string;
@@ -82,8 +83,9 @@ export default function PersonalizacionConfig({
           fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
           color: colorPrimario,
           fontFamily: "'Syne', sans-serif", fontWeight: 700,
+          display: "flex", alignItems: "center", gap: 5,
         }}>
-          🎨 Personalización de marca
+          <IconPaleta size={11} /> Personalización de marca
         </div>
         <span style={{ color: "#94a3b8", fontSize: 14 }}>{abierto ? "−" : "+"}</span>
       </button>

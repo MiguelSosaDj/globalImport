@@ -12,6 +12,15 @@ import ReportesConfig from "./ReportesConfig";
 import CitasConfig from "./CitasConfig";
 import DashboardShell, { type DashboardSeccion } from "./DashboardShell";
 import CalendarioMensual from "@/app/components/CalendarioMensual";
+import {
+  IconLink,
+  IconReloj,
+  IconPaleta,
+  IconPagos,
+  IconBusqueda,
+  IconBandeja,
+  IconSeleccionar,
+} from "@/app/components/ui/Icons";
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 interface Negocio {
   id: string;
@@ -422,7 +431,9 @@ function DetalleCita({ cita }: { cita: Cita | null }) {
         background: "#f8fafc", border: "1px solid #e2e8f0",
         borderRadius: 14, fontSize: 12, fontFamily: "'Syne', sans-serif",
       }}>
-        <div style={{ fontSize: 28, marginBottom: 8 }}>👆</div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8, color: "#cbd5e1" }}>
+          <IconSeleccionar size={26} />
+        </div>
         Selecciona una cita
       </div>
     );
@@ -893,8 +904,9 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
                   fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
                   color: cp, marginBottom: 6,
                   fontFamily: "'Syne', sans-serif", fontWeight: 700,
+                  display: "flex", alignItems: "center", gap: 5,
                 }}>
-                  🔗 Link de agendamiento
+                  <IconLink size={11} /> Link de agendamiento
                 </div>
                 <div style={{
                   fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#64748b",
@@ -948,8 +960,9 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
       fontSize: 9, letterSpacing: 1.2, textTransform: "uppercase",
       color: negocio?.requiere_pago ? cp : "#94a3b8",
       marginBottom: 6, fontFamily: "'Syne', sans-serif", fontWeight: 700,
+      display: "flex", alignItems: "center", gap: 5,
     }}>
-      💳 Pago al agendar
+      <IconPagos size={11} /> Pago al agendar
     </div>
     <div style={{ fontSize: 11, color: "#64748b", fontFamily: "'DM Mono', monospace" }}>
       {negocio?.requiere_pago
@@ -989,9 +1002,9 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
               <div style={{ position: "relative", flex: 1 }}>
                 <span style={{
                   position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)",
-                  fontSize: 13, color: "#94a3b8", pointerEvents: "none",
+                  color: "#94a3b8", pointerEvents: "none", display: "flex",
                 }}>
-                  🔍
+                  <IconBusqueda size={14} />
                 </span>
                 <input
                   value={search}
@@ -1060,8 +1073,8 @@ async function handleMarcarNoAsistio(cita: Cita, e: React.MouseEvent) {
                 background: "#f8fafc",
                 border: "1px dashed #cbd5e1", borderRadius: 16,
               }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>
-                  {search ? "🔍" : "📭"}
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, color: "#cbd5e1" }}>
+                  {search ? <IconBusqueda size={30} /> : <IconBandeja size={30} />}
                 </div>
                 <p style={{ color: "#64748b", fontSize: 13, fontFamily: "'Syne', sans-serif" }}>
                   {search ? "Sin resultados para tu búsqueda" :

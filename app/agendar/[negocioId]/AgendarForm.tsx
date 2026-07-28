@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import SlotPicker from "./SlotPicker";
 import CalendarioMensual from "@/app/components/CalendarioMensual";
+import { IconPaquetes, IconAgenda } from "@/app/components/ui/Icons";
 
 
 const SERVICIOS_POR_TIPO: Record<string, string[]> = {
@@ -483,8 +484,9 @@ const diasInfo = useMemo(() => {
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-slate-900">
-                            📦 {pq.nombre}
+                          <span className="text-sm font-semibold text-slate-900 inline-flex items-center gap-1.5">
+                            <IconPaquetes size={14} className="text-blue-600 flex-shrink-0" />
+                            {pq.nombre}
                             {pq.servicios?.[0]?.nombre && (
                               <span className="text-xs font-normal text-slate-500">
                                 {" "}
@@ -564,10 +566,13 @@ const diasInfo = useMemo(() => {
 
   {paqueteSeleccionado && form.fecha && form.hora && (
     <div className="bg-blue-50 border border-blue-100 rounded-xl p-3.5">
-      <p className="text-xs font-semibold text-blue-700 mb-2">
-        📅 Se agendarán tus {fechasSesiones.length} sesiones, todos los{" "}
-        {DIAS_SEMANA_LARGO[new Date(form.fecha + "T00:00:00").getDay()]} a las{" "}
-        {form.hora}:
+      <p className="text-xs font-semibold text-blue-700 mb-2 flex items-start gap-1.5">
+        <IconAgenda size={13} className="flex-shrink-0 mt-0.5" />
+        <span>
+          Se agendarán tus {fechasSesiones.length} sesiones, todos los{" "}
+          {DIAS_SEMANA_LARGO[new Date(form.fecha + "T00:00:00").getDay()]} a las{" "}
+          {form.hora}:
+        </span>
       </p>
       <div className="flex flex-wrap gap-1.5">
         {fechasSesiones.map((f, i) => (

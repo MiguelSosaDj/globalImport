@@ -54,8 +54,8 @@ const FEATURES = [
 const PASOS = [
   {
     numero: "1",
-    titulo: "Crea tu negocio",
-    texto: "Regístrate en menos de 2 minutos y configura tus servicios y horarios.",
+    titulo: "Elige tu plan",
+    texto: "Actívalo por Stripe o Nequi y configura tus servicios y horarios.",
   },
   {
     numero: "2",
@@ -69,9 +69,30 @@ const PASOS = [
   },
 ];
 
+const CITAS_MOCKUP = [
+  { nombre: "María González", inicial: "MG", hora: "10:00 AM", servicio: "Corte + barba", estado: "confirmada" as const },
+  { nombre: "Andrés Pardo", inicial: "AP", hora: "11:30 AM", servicio: "Consulta general", estado: "pendiente" as const },
+  { nombre: "Laura Mesa", inicial: "LM", hora: "2:00 PM", servicio: "Masaje terapéutico", estado: "confirmada" as const },
+];
+
+function BadgeEstadoMockup({ estado }: { estado: "confirmada" | "pendiente" }) {
+  if (estado === "confirmada") {
+    return (
+      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 whitespace-nowrap">
+        Confirmada
+      </span>
+    );
+  }
+  return (
+    <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+      Pendiente
+    </span>
+  );
+}
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white text-slate-900">
+    <main className="min-h-screen bg-gradient-to-b from-blue-50/70 via-white to-white text-slate-900">
 
       {/* Nav */}
       <nav className="sticky top-0 z-30 flex items-center justify-between px-5 sm:px-10 py-4 border-b border-slate-200 bg-white/80 backdrop-blur-md">
@@ -90,32 +111,25 @@ export default function Home() {
           </Link>
           <Link
             href="/login"
-            className="text-sm text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            Iniciar sesión
-          </Link>
-          <Link
-            href="/registro"
             className="text-sm font-medium px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 shadow-sm shadow-blue-600/20"
           >
-            Empieza gratis
+            Iniciar sesión
           </Link>
         </div>
       </nav>
 
       {/* Hero */}
-      <section className="relative flex flex-col items-center justify-center text-center px-5 sm:px-6 pt-16 sm:pt-28 pb-16 sm:pb-20 gap-6 sm:gap-8 overflow-hidden">
+      <section className="relative flex flex-col items-center justify-center text-center px-5 sm:px-6 pt-16 sm:pt-24 pb-20 sm:pb-28 gap-6 sm:gap-8 overflow-hidden">
         <div
-          className="pointer-events-none absolute inset-x-0 top-[-10%] h-[560px] -z-10"
-          style={{
-            background:
-              "radial-gradient(ellipse 700px 400px at 50% 0%, rgba(37,99,235,0.10), transparent 70%)",
-          }}
+          className="pointer-events-none absolute -top-40 -left-32 w-[420px] h-[420px] rounded-full bg-blue-300/40 blur-3xl -z-10"
         />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-[420px] -z-10 opacity-[0.35]"
+          className="pointer-events-none absolute -top-20 -right-24 w-[460px] h-[460px] rounded-full bg-indigo-200/50 blur-3xl -z-10"
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[420px] -z-10 opacity-[0.4]"
           style={{
-            backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)",
+            backgroundImage: "radial-gradient(#94a3b8 1px, transparent 1px)",
             backgroundSize: "22px 22px",
             maskImage: "radial-gradient(ellipse 600px 320px at 50% 0%, black, transparent 75%)",
             WebkitMaskImage: "radial-gradient(ellipse 600px 320px at 50% 0%, black, transparent 75%)",
@@ -128,7 +142,7 @@ export default function Home() {
         </span>
 
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold max-w-4xl leading-[1.1] sm:leading-[1.05] tracking-tight text-slate-900">
-          Tus citas, <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-500">bajo tu control</span>
+          Tus citas, <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">bajo tu control</span>
         </h1>
 
         <p className="text-base sm:text-lg text-slate-600 max-w-lg leading-relaxed">
@@ -138,20 +152,20 @@ export default function Home() {
 
         <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 mt-2">
           <Link
-            href="/agendar"
-            className="text-sm font-medium px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 shadow-md shadow-blue-600/25"
-          >
-            Empieza gratis
-          </Link>
-          <Link
             href="/precios"
-            className="text-sm font-medium px-8 py-3.5 rounded-full border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-all duration-300"
+            className="text-sm font-medium px-8 py-3.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 hover:scale-105 shadow-md shadow-blue-600/25"
           >
             Ver planes
           </Link>
+          <Link
+            href="/login"
+            className="text-sm font-medium px-8 py-3.5 rounded-full border border-slate-300 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition-all duration-300"
+          >
+            Iniciar sesión
+          </Link>
         </div>
 
-        <div className="flex items-center gap-6 sm:gap-10 mt-8 pt-8 border-t border-slate-200">
+        <div className="flex items-center gap-6 sm:gap-10 pt-2">
           <div className="flex flex-col items-center gap-1">
             <span className="text-xl sm:text-2xl font-bold text-slate-900">2,400+</span>
             <span className="text-[11px] sm:text-xs text-slate-500 text-center">citas agendadas</span>
@@ -166,11 +180,50 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Mockup del producto */}
+        <div className="relative w-full max-w-lg mx-auto mt-6">
+          <div className="absolute -inset-6 bg-gradient-to-tr from-blue-300/40 via-indigo-200/30 to-transparent rounded-[2.5rem] blur-2xl -z-10" />
+          <div className="relative bg-white border border-slate-200 rounded-3xl shadow-2xl shadow-blue-900/10 p-5 sm:p-6 text-left">
+            <div className="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
+              <div>
+                <p className="text-[11px] text-slate-400 font-medium uppercase tracking-wide">Hoy</p>
+                <p className="text-sm font-semibold text-slate-900">28 de julio</p>
+              </div>
+              <span className="text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100 px-3 py-1 rounded-full whitespace-nowrap">
+                9 citas activas
+              </span>
+            </div>
+            <div className="flex flex-col gap-2.5">
+              {CITAS_MOCKUP.map((c) => (
+                <div
+                  key={c.nombre}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 px-3 py-2.5 hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {c.inicial}
+                    </span>
+                    <div className="min-w-0 text-left">
+                      <p className="text-xs font-semibold text-slate-900 truncate">{c.nombre}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{c.servicio}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                    <span className="text-[11px] text-slate-500 font-medium">{c.hora}</span>
+                    <BadgeEstadoMockup estado={c.estado} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
       </section>
 
       {/* Features */}
-      <section className="relative bg-slate-50/60 border-y border-slate-100 py-16 sm:py-24">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8">
+      <section className="relative bg-slate-50/80 border-y border-slate-200 py-16 sm:py-24 overflow-hidden">
+        <div className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[300px] rounded-full bg-blue-100/60 blur-3xl -z-10" />
+        <div className="relative max-w-5xl mx-auto px-5 sm:px-8">
           <div className="flex flex-col items-center text-center gap-3 mb-10 sm:mb-14">
             <p className="text-xs font-medium tracking-widest uppercase text-blue-600">Todo en un solo lugar</p>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900">
@@ -201,10 +254,10 @@ export default function Home() {
       {/* Cómo funciona */}
       <section className="relative overflow-hidden">
         <div
-          className="pointer-events-none absolute top-0 right-0 w-[420px] h-[420px] rounded-full bg-blue-100/50 blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"
+          className="pointer-events-none absolute top-0 right-0 w-[460px] h-[460px] rounded-full bg-indigo-200/50 blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"
         />
         <div
-          className="pointer-events-none absolute bottom-0 left-0 w-[380px] h-[380px] rounded-full bg-blue-50 blur-3xl -z-10 -translate-x-1/3 translate-y-1/3"
+          className="pointer-events-none absolute bottom-0 left-0 w-[420px] h-[420px] rounded-full bg-blue-200/50 blur-3xl -z-10 -translate-x-1/3 translate-y-1/3"
         />
         <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-24">
         <div className="flex flex-col items-center text-center gap-3 mb-10 sm:mb-14">
@@ -236,25 +289,25 @@ export default function Home() {
 
       {/* CTA final */}
       <section className="relative flex flex-col items-center text-center px-5 sm:px-6 pb-20 sm:pb-32 gap-6 overflow-hidden">
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] rounded-full bg-blue-100/40 blur-3xl -z-10" />
-        <div className="max-w-2xl mx-auto w-full rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-blue-50 to-white p-8 sm:p-16 shadow-lg shadow-blue-100/40">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] rounded-full bg-blue-200/50 blur-3xl -z-10" />
+        <div className="max-w-2xl mx-auto w-full rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-100 via-blue-50 to-white p-8 sm:p-16 shadow-xl shadow-blue-900/10">
           <h2 className="text-2xl sm:text-4xl font-bold tracking-tight mb-4 text-slate-900">
             Listo para llenar tu agenda
           </h2>
           <p className="text-slate-600 text-base max-w-md mx-auto mb-8">
-            Crea tu cuenta gratis y recibe tu primera cita hoy mismo.
+            Elige tu plan y recibe tu primera cita hoy mismo.
           </p>
           <Link
-            href="/registro"
+            href="/precios"
             className="inline-block bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-sm font-semibold px-8 py-3.5 rounded-full shadow-sm shadow-blue-600/30 hover:shadow-md hover:shadow-blue-600/40 transition-all duration-300 hover:scale-105"
           >
-            Crear cuenta gratis
+            Ver planes
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 bg-slate-50/60 py-8 px-5 sm:px-10">
+      <footer className="border-t border-slate-200 bg-slate-50 py-8 px-5 sm:px-10">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <span className="flex items-center gap-2 font-medium text-slate-700">
             <span className="w-6 h-6 rounded-md bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-xs font-bold">

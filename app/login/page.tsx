@@ -88,9 +88,8 @@ async function handleSubmit(e: React.FormEvent) {
           </button>
 
           <p className="text-center text-sm text-slate-500">
-            No tienes cuenta?{" "}
-            <Link href="/registro" className="text-blue-600 hover:text-blue-700 transition-colors">
-              Registrate gratis
+            <Link href="/recuperar-password" className="text-blue-600 hover:text-blue-700 transition-colors">
+              ¿Olvidaste tu contraseña?
             </Link>
           </p>
         </form>

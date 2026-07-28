@@ -53,12 +53,30 @@ export async function POST(
     }
 
     // 2) Crear el negocio asociado, ya con el plan pagado activo.
+    // El pago por Nequi es manual (no recurrente como Stripe), así que
+    // calculamos aquí la fecha de vencimiento según el período comprado —
+    // subscription_end es la misma columna que usa el webhook de Stripe, y
+    // el dashboard revisa esta fecha para desactivar el acceso automáticamente
+    // cuando se cumple el mes o el año. Se suman los mismos 7 días de prueba
+    // gratis que ofrece el checkout de Stripe (trial_period_days: 7), para
+    // que el beneficio sea igual sin importar el método de pago.
+    const DIAS_TRIAL = 7;
+    const vence = new Date();
+    if (solicitud.periodo === "anual") {
+      vence.setFullYear(vence.getFullYear() + 1);
+    } else {
+      vence.setMonth(vence.getMonth() + 1);
+    }
+    vence.setDate(vence.getDate() + DIAS_TRIAL);
+
     const { error: negocioError } = await supabaseAdmin.from("negocios").insert({
       nombre: solicitud.negocio_nombre,
       tipo: solicitud.tipo_negocio,
       user_id: nuevoUsuario.user.id,
       plan: solicitud.plan,
       subscription_status: "activo",
+      subscription_start: new Date().toISOString(),
+      subscription_end: vence.toISOString(),
     });
 
     if (negocioError) {
